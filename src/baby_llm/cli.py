@@ -5,7 +5,6 @@ import sys
 from baby_llm.core.models import InteractionTurn
 from baby_llm.core.ring_buffer import EpisodicRingBuffer
 from baby_llm.dream.worker import dream_worker
-from baby_llm.mcp.server import run_mcp_server
 from baby_llm.runtime.context_assembler import context_assembler
 from baby_llm.runtime.ollama_client import ollama_client
 from baby_llm.storage.graph_store import graph_store
@@ -104,6 +103,7 @@ def main():
     elif args.command == "memories":
         list_memories()
     elif args.command == "mcp":
+        from baby_llm.mcp.server import run_mcp_server
         run_mcp_server()
     elif args.command == "serve":
         import uvicorn

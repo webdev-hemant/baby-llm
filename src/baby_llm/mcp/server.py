@@ -2,7 +2,15 @@
 
 import asyncio
 from typing import List, Optional
-from mcp.server.fastmcp import FastMCP
+
+try:
+    from mcp.server.fastmcp import FastMCP
+except (ImportError, ModuleNotFoundError):
+    try:
+        from mcp.server.mcpserver import MCPServer as FastMCP
+    except (ImportError, ModuleNotFoundError):
+        FastMCP = None
+
 from baby_llm.core.models import MemoryCategory
 from baby_llm.dream.resolver import conflict_resolver
 from baby_llm.retrieval.hybrid import hybrid_retriever
@@ -10,7 +18,7 @@ from baby_llm.storage.graph_store import graph_store
 from baby_llm.success.tracker import success_tracker
 
 # Initialize FastMCP Server
-mcp = FastMCP("baby-llm-mcp")
+mcp = FastMCP("baby-llm-mcp") if FastMCP is not None else None
 
 
 @mcp.tool()
