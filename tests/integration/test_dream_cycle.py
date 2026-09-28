@@ -49,7 +49,7 @@ def test_full_dream_consolidation_and_contradiction(integrated_system):
     # Step 2: Later, user moves to Tokyo (Contradiction / Update)
     turn2 = InteractionTurn(
         user_input="I live in Tokyo now after relocating.",
-        assistant_response="Welcome to Japan!",
+        assistant_response="Tokyo is a wonderful place to live.",
     )
     wal.append_turn(turn2)
 

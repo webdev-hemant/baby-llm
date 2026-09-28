@@ -12,7 +12,7 @@ from baby_llm.dream.resolver import conflict_resolver
 from baby_llm.dream.worker import dream_worker
 from baby_llm.retrieval.hybrid import hybrid_retriever
 from baby_llm.runtime.context_assembler import context_assembler
-from baby_llm.runtime.ollama_client import ollama_client
+from baby_llm.runtime.llm_provider import llm_provider
 from baby_llm.storage.graph_store import graph_store
 from baby_llm.storage.wal import wal_logger
 from baby_llm.success.agent import success_agent
@@ -96,11 +96,11 @@ async def chat_endpoint(req: ChatRequest):
 
     # 2. Local LLM inference
     try:
-        response_text = ollama_client.chat_sync(messages)
+        response_text = llm_provider.chat_sync(messages)
     except Exception as e:
         response_text = (
-            f"I am running locally, but could not connect to Ollama at {ollama_client.base_url}. "
-            f"(Error: {str(e)}). I have securely logged your message to local memory."
+            f"I am running locally, but encountered an error: {str(e)}. "
+            f"I have securely logged your message to local memory."
         )
 
     # 3. Check Gentle Curiosity probe

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import List
 from baby_llm.core.models import Commitment
-from baby_llm.runtime.ollama_client import OllamaClient, ollama_client
+from baby_llm.runtime.llm_provider import llm_provider
 from baby_llm.storage.graph_store import BiTemporalGraphStore, graph_store
 from baby_llm.success.tracker import SuccessTracker, success_tracker
 
@@ -13,7 +13,7 @@ class PersonalSuccessAgent:
         self,
         tracker: SuccessTracker = success_tracker,
         graph: BiTemporalGraphStore = graph_store,
-        llm: OllamaClient = ollama_client,
+        llm = llm_provider,
     ):
         self.tracker = tracker
         self.graph = graph

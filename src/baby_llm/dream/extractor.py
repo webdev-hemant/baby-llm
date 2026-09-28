@@ -5,7 +5,7 @@ import re
 from typing import Any, Dict, List, Optional
 from baby_llm.config import settings
 from baby_llm.core.models import InteractionTurn, MemoryCategory
-from baby_llm.runtime.ollama_client import OllamaClient, ollama_client
+from baby_llm.runtime.llm_provider import llm_provider
 
 
 EXTRACTION_PROMPT = """You are an expert cognitive memory extraction system.
@@ -30,9 +30,8 @@ JSON ONLY:
 
 
 class FactExtractor:
-    def __init__(self, client: OllamaClient = ollama_client, model: str = settings.dream_model):
-        self.client = client
-        self.model = model
+    def __init__(self, provider=llm_provider):
+        self.provider = provider
 
     def extract_from_turn(self, turn: InteractionTurn) -> List[Dict[str, Any]]:
         """Extract atomic facts from an interaction turn."""
@@ -43,7 +42,7 @@ class FactExtractor:
         ]
 
         try:
-            raw_response = self.client.chat_sync(messages, model=self.model)
+            raw_response = self.provider.chat_sync(messages)
             return self._parse_json_response(raw_response)
         except Exception:
             # Fallback heuristic parser if local LLM is offline or returns malformed text

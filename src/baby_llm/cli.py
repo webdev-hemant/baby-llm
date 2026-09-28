@@ -6,7 +6,7 @@ from baby_llm.core.models import InteractionTurn
 from baby_llm.core.ring_buffer import EpisodicRingBuffer
 from baby_llm.dream.worker import dream_worker
 from baby_llm.runtime.context_assembler import context_assembler
-from baby_llm.runtime.ollama_client import ollama_client
+from baby_llm.runtime.llm_provider import llm_provider
 from baby_llm.storage.graph_store import graph_store
 from baby_llm.storage.wal import wal_logger
 from baby_llm.success.curiosity import curiosity_engine
@@ -15,7 +15,7 @@ from baby_llm.success.curiosity import curiosity_engine
 def interactive_chat():
     print("=" * 60)
     print("👶 Baby LLM Interactive Terminal")
-    print("   Privacy-First • Local Memory • Evolving Companion")
+    print("   Privacy-First • Local Memory • Qwen2.5-0.5B (Embedded)")
     print("   Type 'exit' to quit, '/dream' to trigger consolidation.")
     print("=" * 60)
 
@@ -44,14 +44,12 @@ def interactive_chat():
 
         print("\nBaby LLM > ", end="", flush=True)
         try:
-            # Check if streaming is feasible
-            reply_chunks = []
-            reply = ollama_client.chat_sync(messages)
+            reply = llm_provider.chat_sync(messages)
             print(reply)
             assistant_text = reply
         except Exception as e:
             assistant_text = (
-                f"[Local Offline Mode] (Ollama unreachable: {e}). Your message has been logged to memory."
+                f"[Local Offline Mode] (Error: {e}). Your message has been logged to memory."
             )
             print(assistant_text)
 
