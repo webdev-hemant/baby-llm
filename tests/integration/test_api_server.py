@@ -6,6 +6,12 @@ from baby_llm.api.server import app
 client = TestClient(app)
 
 
+def test_root_serves_html():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "<!DOCTYPE html>" in response.text or "Baby LLM" in response.text
+
+
 def test_health_check():
     response = client.get("/api/health")
     assert response.status_code == 200

@@ -20,6 +20,7 @@ from baby_llm.success.curiosity import curiosity_engine
 from baby_llm.success.tracker import success_tracker
 
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, RedirectResponse
 from pathlib import Path
 
 app = FastAPI(title="Baby LLM Engine", version="0.1.0")
@@ -32,8 +33,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Glass-Box UI static files
+# UI directory resolution
 ui_dir = Path(__file__).resolve().parent.parent.parent.parent / "ui"
+
+@app.get("/")
+def root():
+    index_file = ui_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return RedirectResponse(url="/ui/")
+
+@app.get("/styles.css")
+def get_styles():
+    css_file = ui_dir / "styles.css"
+    if css_file.exists():
+        return FileResponse(str(css_file), media_type="text/css")
+    return {"detail": "styles.css not found"}
+
+@app.get("/app.js")
+def get_app_js():
+    js_file = ui_dir / "app.js"
+    if js_file.exists():
+        return FileResponse(str(js_file), media_type="application/javascript")
+    return {"detail": "app.js not found"}
+
 if ui_dir.exists():
     app.mount("/ui", StaticFiles(directory=str(ui_dir), html=True), name="ui")
 
