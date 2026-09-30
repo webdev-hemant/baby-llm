@@ -153,11 +153,30 @@ Start the local REST server and open the web dashboard:
 ```bash
 .venv/bin/python -m baby_llm.cli serve
 ```
-Open **[http://127.0.0.1:21225/](http://127.0.0.1:21225/)** in your browser (uses dedicated uncolliding port `21225` spelling **BABY**) to access:
+
+Open **[http://127.0.0.1:21225/](http://127.0.0.1:21225/)** in your browser to access:
 - **Interactive Companion**: Chat with memory attribution indicators.
 - **Mindstream Vault**: Inspect categorized facts, confidence ratings, and stability scores.
 - **Bi-Temporal Timeline**: Visual historical trajectory of evolving facts.
 - **Success Compass**: Morning briefs, active commitments, and accountability tracking.
+
+> [!NOTE]
+> **Why Port 21225?**
+> - **Mnemonic Encoding**: `21225` spells **`B-A-B-Y`** (`B=2, A=1, B=2, Y=25`).
+> - **Collision-Proof**: Operating in the user-registered port range (`1024`–`49151`), it never collides with default ports used by React/Vite/Next (`3000`, `5173`), Flask/Django/FastAPI defaults (`5000`, `8000`, `8080`), database engines (`5432`, `6379`, `27017`), or local AI endpoints (`11434`, `1234`, `7860`, `8501`).
+> - **Dynamic Origin**: The frontend dynamically binds to `window.location.origin`, adapting seamlessly whether accessed via `127.0.0.1`, `localhost`, or a custom port.
+
+#### Customizing Host & Port:
+You can customize the port and host at launch or via environment variables:
+```bash
+# Via CLI arguments:
+.venv/bin/python -m baby_llm.cli serve --host 127.0.0.1 --port 21225
+
+# Via environment variables:
+export BABY_LLM_API_PORT=21225
+export BABY_LLM_API_HOST=127.0.0.1
+.venv/bin/python -m baby_llm.cli serve
+```
 
 ### 3. Run Universal MCP Server
 Expose Baby LLM tools to Claude Desktop, Cursor, or any MCP client:
