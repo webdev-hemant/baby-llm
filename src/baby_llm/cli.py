@@ -1,7 +1,7 @@
 """Command-line interface (CLI) for Baby LLM."""
 
 import argparse
-import sys
+from baby_llm.config import settings
 from baby_llm.core.models import InteractionTurn
 from baby_llm.core.ring_buffer import EpisodicRingBuffer
 from baby_llm.dream.worker import dream_worker
@@ -88,8 +88,8 @@ def main():
     subparsers.add_parser("mcp", help="Run Universal MCP server over stdio")
     
     serve_parser = subparsers.add_parser("serve", help="Run FastAPI local REST server")
-    serve_parser.add_argument("--port", type=int, default=8000, help="Port to bind")
-    serve_parser.add_argument("--host", type=str, default="127.0.0.1", help="Host to bind")
+    serve_parser.add_argument("--port", type=int, default=settings.api_port, help=f"Port to bind (default: {settings.api_port})")
+    serve_parser.add_argument("--host", type=str, default=settings.api_host, help=f"Host to bind (default: {settings.api_host})")
 
     args = parser.parse_args()
 

@@ -151,9 +151,9 @@ Chat directly with Baby LLM from your command line:
 ### 2. Launch FastAPI Server & Glass-Box Dashboard
 Start the local REST server and open the web dashboard:
 ```bash
-.venv/bin/python -m baby_llm.cli serve --port 8000
+.venv/bin/python -m baby_llm.cli serve
 ```
-Open **[http://127.0.0.1:8000/ui/](http://127.0.0.1:8000/ui/)** in your browser to access:
+Open **[http://127.0.0.1:21225/](http://127.0.0.1:21225/)** in your browser (uses dedicated uncolliding port `21225` spelling **BABY**) to access:
 - **Interactive Companion**: Chat with memory attribution indicators.
 - **Mindstream Vault**: Inspect categorized facts, confidence ratings, and stability scores.
 - **Bi-Temporal Timeline**: Visual historical trajectory of evolving facts.

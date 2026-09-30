@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     lancedb_dirname: str = "lancedb"
     vault_dirname: str = "vault"
 
+    # Server / REST API Settings (21225 spells 'BABY': B=2, A=1, B=2, Y=25)
+    api_host: str = "127.0.0.1"
+    api_port: int = 21225
+
     # Fast-Path LLM Settings
     ollama_base_url: str = "http://localhost:11434"
     chat_model: str = "llama3.2:latest"
