@@ -35,8 +35,8 @@
 │   └──────────────────────────────────┬──────────────────────────────────┘   │
 │                                      │                                      │
 │                                      ▼                                      │
-│                  Local Inference Engine (Ollama / llama.cpp)                │
-│                  Models: Llama 3.2 3B / Qwen 2.5 7B / Mistral Nemo          │
+│                  Local Inference Engine (Embedded llama-cpp-python / Ollama) │
+│                  Default Model: Qwen2.5-0.5B-Instruct-GGUF (~398MB, <450MB) │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
                       Instant Append   │ (Zero-blocking write)
@@ -52,7 +52,7 @@
 │ 3. THE "REM DREAM" CONSOLIDATION ENGINE (Asynchronous Background Worker)    │
 │                                                                             │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │ Quantized SLM Worker (SmolLM2-1.7B-Q4 / Qwen2.5-1.5B-Q4)            │   │
+│   │ Quantized SLM Worker (Embedded Qwen2.5-0.5B-Instruct GGUF)          │   │
 │   │  • Step A: SPO Fact Extraction (Subject, Predicate, Object Triples) │   │
 │   │  • Step B: Bi-Temporal Conflict Resolution (valid_from/invalid_from)│   │
 │   │  • Step C: Ebbinghaus Retention Decay & Reinforcement Computation    │   │
@@ -108,7 +108,9 @@ personal_success-manager/
 │       │   └── hybrid.py             # Reciprocal Rank Fusion (RRF) retriever
 │       ├── runtime/
 │       │   ├── __init__.py
-│       │   ├── ollama_client.py      # Streaming inference connector
+│       │   ├── embedded_engine.py    # Embedded llama-cpp-python GGUF engine
+│       │   ├── llm_provider.py       # Unified LLM provider (Embedded / Ollama)
+│       │   ├── ollama_client.py      # Optional external Ollama streaming connector
 │       │   └── context_assembler.py  # Sub-20ms prompt compiler
 │       ├── dream/
 │       │   ├── __init__.py
@@ -239,11 +241,11 @@ Where:
 │ • SQLite WAL logger & In-Memory Ring Buffer                                 │
 │ • LanceDB Vector Store + ONNX BGE Embeddings                                │
 │ • FTS5 BM25 + Vector Hybrid Retrieval (RRF)                                │
-│ • Zero-lag Context Assembler + Ollama Streaming Bridge                      │
+│ • Zero-lag Context Assembler + Embedded Qwen2.5-0.5B Engine                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ PHASE 2: The REM Dream Engine & Bi-Temporal Graph           (Weeks 4 - 6)   │
 │ • Asynchronous background worker (Idle detection & Cron)                    │
-│ • Quantized sub-2B SLM Atomic SPO Triple extraction                         │
+│ • Quantized sub-1B SLM (Qwen2.5-0.5B) Atomic SPO Triple extraction          │
 │ • Bi-temporal resolution (valid_from / invalid_from)                        │
 │ • Ebbinghaus decay calculator with YMYL Shield                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -280,15 +282,15 @@ Establish a zero-lag (< 30ms overhead) chat pipeline that retrieves relevant con
    * Implement `src/baby_llm/retrieval/bm25.py` for keyword matches on `memory_fts`.
    * Implement `src/baby_llm/retrieval/hybrid.py` using Reciprocal Rank Fusion (RRF):
      $$RRF\_Score(d) = \sum_{m \in \{bm25, vector\}} \frac{1}{60 + rank_m(d)}$$
-5. **Context Assembler & Ollama Bridge**
+5. **Context Assembler & Embedded Qwen2.5 Inference Engine**
    * Build `src/baby_llm/runtime/context_assembler.py` to merge:
      * System Persona & Developmental Stage Directive.
      * Top-K Retrieved Memories (Bi-temporal valid only).
      * Recent Ring Buffer (last 10 turns).
-   * Stream completion via `src/baby_llm/runtime/ollama_client.py`.
+   * Stream completion via `src/baby_llm/runtime/llm_provider.py` backed by `embedded_engine.py` (`Qwen2.5-0.5B-Instruct-GGUF` ~398MB) with optional external Ollama fallback.
 
 #### Deliverables & Acceptance Criteria
-* CLI chat interface running end-to-end against local Ollama.
+* CLI chat interface running 100% self-contained locally via embedded Qwen2.5-0.5B (zero external Ollama daemon required).
 * Benchmarked latency: Context assembly completes in under 25ms.
 * Zero lost turns in `interaction_log`.
 
@@ -304,7 +306,7 @@ Implement the autonomous background consolidation process that extracts facts, r
    * Build `src/baby_llm/dream/worker.py` utilizing OS idle timers (e.g., Mac IOKit or cross-platform activity checks) and cron fallback (03:00 AM).
    * Ensure concurrency guards: Pause dream worker immediately if the user interacts with the app.
 2. **Atomic Triple Extraction Pipeline**
-   * Implement `src/baby_llm/dream/extractor.py` utilizing a quantized sub-2B SLM (SmolLM2-1.7B-Instruct or Qwen2.5-1.5B via Ollama/llama.cpp).
+   * Implement `src/baby_llm/dream/extractor.py` utilizing the quantized sub-1B embedded SLM (`Qwen2.5-0.5B-Instruct-GGUF` via `embedded_engine.py` or optional Ollama).
    * Output strict JSON schema: `[{"subject": "...", "predicate": "...", "object": "...", "category": "...", "confidence": 0.95, "ymyl": false}]`.
 3. **Bi-Temporal Conflict Resolution Engine**
    * Implement `src/baby_llm/dream/resolver.py`:
@@ -339,8 +341,8 @@ Provide an open ecosystem interface for external tools (Cursor, Claude Desktop) 
      * `get_active_goals() -> List[Commitment]`
      * `record_daily_win(note: str) -> str`
    * Support stdio transport for Cursor / Claude Desktop configuration.
-2. **FastAPI Desktop Bridge**
-   * Implement `src/baby_llm/api/server.py` exposing REST endpoints for the UI:
+2. **FastAPI Desktop Bridge (Port 21225)**
+   * Implement `src/baby_llm/api/server.py` exposing REST endpoints on dedicated collision-proof port `21225` (spelling "BABY"):
      * `GET /api/memories?status=active`
      * `POST /api/memories/override`
      * `DELETE /api/memories/{id}`
@@ -393,13 +395,14 @@ Transform Baby LLM from a passive memory store into an active personal success p
 
 | Component | Technology | Footprint / Latency Budget |
 | :--- | :--- | :--- |
-| **Desktop Shell** | Tauri v2 (Rust + Webview) | Disk: < 15MB, RAM: < 35MB |
-| **Backend Core** | Python 3.11+ / FastAPI | Idle RAM: ~60MB |
+| **Desktop Shell** | Web Dashboard & Tauri v2 Compatible | RAM: < 35MB |
+| **Backend Core** | Python 3.12+ / FastAPI (Port 21225) | Idle RAM: ~60MB |
 | **Relational Storage** | SQLite (WAL mode) | Read/Write: < 2ms |
 | **Vector DB** | LanceDB (columnar, disk-native) | Search: < 10ms for 100k vectors |
 | **Local Embedder** | ONNX `bge-small-en-v1.5` | Latency: ~8ms on CPU (384-dim) |
-| **Chat LLM** | Ollama (`llama3.2:3b` / `qwen2.5:7b`) | VRAM: 2.0GB – 4.5GB |
-| **Dream Consolidation SLM** | `SmolLM2-1.7B-Instruct-Q4` | VRAM: < 800MB (Runs only when idle) |
+| **Default Embedded SLM** | **`Qwen2.5-0.5B-Instruct-GGUF`** (`llama-cpp-python`) | **Disk: ~398MB, RAM: < 450MB (Self-contained)** |
+| **Optional External LLM** | Ollama (`llama3.2:3b` / `qwen2.5:7b`) | VRAM: 2.0GB – 4.5GB (Optional) |
+| **Dream Consolidation SLM** | `Qwen2.5-0.5B-Instruct` (Embedded / Unified) | Runs in background with thread-safe lock |
 | **Security Layer** | AES-GCM-256 via OS Keyring | Negligible overhead |
 
 ---
