@@ -26,6 +26,20 @@ const btnCloseModal = document.getElementById("btn-close-modal");
 const btnCancelMemory = document.getElementById("btn-cancel-memory");
 const formCreateMemory = document.getElementById("form-create-memory");
 const activeVramText = document.getElementById("active-vram-text");
+const toggleIncognito = document.getElementById("toggle-incognito");
+const incognitoPillText = document.getElementById("incognito-pill-text");
+
+if (toggleIncognito) {
+  toggleIncognito.addEventListener("change", () => {
+    if (toggleIncognito.checked) {
+      if (incognitoPillText) incognitoPillText.textContent = "🕵️ Incognito: ON";
+      if (chatInput) chatInput.placeholder = "🕵️ Incognito: Private prompt (WAL logging bypassed)...";
+    } else {
+      if (incognitoPillText) incognitoPillText.textContent = "🕵️ Incognito: Off";
+      if (chatInput) chatInput.placeholder = "Type a thought, goal, or life update...";
+    }
+  });
+}
 
 // Tab Switching
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -69,11 +83,14 @@ chatForm.addEventListener("submit", async (e) => {
   // Show typing placeholder
   const placeholderId = appendMessage("Thinking locally...", "assistant", true);
 
+  // Check incognito state
+  const isIncognito = toggleIncognito && toggleIncognito.checked;
+
   try {
     const res = await fetch(`${API_BASE}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify({ message: text, incognito: isIncognito }),
     });
     const data = await res.json();
     updateMessage(placeholderId, data.reply);
@@ -153,7 +170,10 @@ function renderMemoryCards() {
       <div class="fact-text">${escapeHtml(m.fact)}</div>
       <div class="card-meta">
         <span>Conf: ${Math.round(m.confidence * 100)}% • Stab: ${m.stability.toFixed(1)}</span>
-        <button class="btn-card-action" onclick="eraseMemory('${m.id}')" title="Permanently erase memory node">Erase</button>
+        <div class="card-actions-group">
+          <button class="btn-card-action btn-card-edit" onclick="openEditMemory('${m.id}')" title="Edit memory node">Edit</button>
+          <button class="btn-card-action" onclick="eraseMemory('${m.id}')" title="Permanently erase memory node">Erase</button>
+        </div>
       </div>
     `;
     memoryCardsContainer.appendChild(card);
@@ -254,13 +274,41 @@ btnTriggerDream.addEventListener("click", async () => {
   }
 });
 
-// Add Memory Modal
-btnAddMemory.addEventListener("click", () => { modalAddMemory.style.display = "flex"; });
+// Add / Edit Memory Modal Handlers
+btnAddMemory.addEventListener("click", () => {
+  const editIdEl = document.getElementById("edit-node-id");
+  if (editIdEl) editIdEl.value = "";
+  const titleEl = document.getElementById("modal-title");
+  if (titleEl) titleEl.textContent = "Create Personal Memory Node";
+  formCreateMemory.reset();
+  document.getElementById("input-subject").value = "user";
+  modalAddMemory.style.display = "flex";
+});
+
 btnCloseModal.addEventListener("click", () => { modalAddMemory.style.display = "none"; });
 btnCancelMemory.addEventListener("click", () => { modalAddMemory.style.display = "none"; });
 
+window.openEditMemory = function(id) {
+  const node = activeMemories.find(m => m.id === id);
+  if (!node) return;
+  const editIdEl = document.getElementById("edit-node-id");
+  if (editIdEl) editIdEl.value = node.id;
+  const titleEl = document.getElementById("modal-title");
+  if (titleEl) titleEl.textContent = "Edit Personal Memory Node";
+
+  document.getElementById("input-subject").value = node.subject;
+  document.getElementById("input-predicate").value = node.predicate;
+  document.getElementById("input-object").value = node.object;
+  document.getElementById("select-category").value = node.category.toLowerCase();
+  document.getElementById("check-ymyl").checked = Boolean(node.ymyl_protected);
+  modalAddMemory.style.display = "flex";
+};
+
 formCreateMemory.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const editIdEl = document.getElementById("edit-node-id");
+  const editId = editIdEl ? editIdEl.value.trim() : "";
+
   const payload = {
     subject: document.getElementById("input-subject").value.trim(),
     predicate: document.getElementById("input-predicate").value.trim(),
@@ -271,18 +319,24 @@ formCreateMemory.addEventListener("submit", async (e) => {
   };
 
   try {
-    const res = await fetch(`${API_BASE}/api/memories`, {
-      method: "POST",
+    const url = editId ? `${API_BASE}/api/memories/${editId}` : `${API_BASE}/api/memories`;
+    const method = editId ? "PUT" : "POST";
+    const res = await fetch(url, {
+      method: method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     if (res.ok) {
       modalAddMemory.style.display = "none";
       formCreateMemory.reset();
+      if (editIdEl) editIdEl.value = "";
       await loadMemories();
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      alert("Error saving memory: " + (errData.detail || res.statusText));
     }
   } catch (err) {
-    alert("Error creating memory: " + err.message);
+    alert("Error saving memory: " + err.message);
   }
 });
 

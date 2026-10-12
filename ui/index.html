@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=2.0">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
 </head>
 <body>
   <div class="ambient-glow glow-1"></div>
@@ -81,6 +83,13 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="chat-controls-bar">
+          <label class="incognito-toggle" id="incognito-label" title="Incognito Mode: Bypass WAL logging for temporary/private questions">
+            <input type="checkbox" id="toggle-incognito">
+            <span class="incognito-pill" id="incognito-pill-text">🕵️ Incognito: Off</span>
+          </label>
         </div>
 
         <form class="chat-input-bar" id="chat-form">
@@ -162,14 +171,15 @@
     </aside>
   </main>
 
-  <!-- Modal: Add Memory Node -->
+  <!-- Modal: Add / Edit Memory Node -->
   <div class="modal-backdrop" id="modal-add-memory" style="display: none;">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Create Personal Memory Node</h3>
+        <h3 id="modal-title">Create Personal Memory Node</h3>
         <button class="modal-close" id="btn-close-modal">&times;</button>
       </div>
       <form id="form-create-memory">
+        <input type="hidden" id="edit-node-id" value="">
         <div class="form-group">
           <label for="input-subject">Subject</label>
           <input type="text" id="input-subject" value="user" required>

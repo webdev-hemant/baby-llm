@@ -1,6 +1,6 @@
 """FastAPI server for Baby LLM REST API and WebSocket events."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,7 +55,19 @@ def get_app_js():
     js_file = ui_dir / "app.js"
     if js_file.exists():
         return FileResponse(str(js_file), media_type="application/javascript")
-    return {"detail": "app.js not found"}
+@app.get("/manifest.json")
+def get_manifest():
+    manifest_file = ui_dir / "manifest.json"
+    if manifest_file.exists():
+        return FileResponse(str(manifest_file), media_type="application/manifest+json")
+    return {"detail": "manifest.json not found"}
+
+@app.get("/icon.svg")
+def get_icon():
+    icon_file = ui_dir / "icon.svg"
+    if icon_file.exists():
+        return FileResponse(str(icon_file), media_type="image/svg+xml")
+    return {"detail": "icon.svg not found"}
 
 if ui_dir.exists():
     app.mount("/ui", StaticFiles(directory=str(ui_dir), html=True), name="ui")
@@ -68,6 +80,7 @@ class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
     stream: bool = False
+    incognito: bool = False
 
 
 class MemoryCreateRequest(BaseModel):
@@ -79,14 +92,26 @@ class MemoryCreateRequest(BaseModel):
     ymyl_protected: bool = False
 
 
+class MemoryUpdateRequest(BaseModel):
+    subject: Optional[str] = None
+    predicate: Optional[str] = None
+    object: Optional[str] = None
+    category: Optional[MemoryCategory] = None
+    confidence: Optional[float] = None
+    ymyl_protected: Optional[bool] = None
+
+
 @app.get("/api/health")
 def health_check():
-    return {"status": "awake", "version": "0.1.0", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "awake", "version": "0.1.0", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
     """Real-time Fast-Path chat endpoint (<30ms assembly overhead)."""
+    # Notify background dream worker of user activity
+    dream_worker.record_user_activity()
+
     # 1. Assemble context
     messages = context_assembler.assemble(
         user_input=req.message,
@@ -103,24 +128,30 @@ async def chat_endpoint(req: ChatRequest):
             f"I have securely logged your message to local memory."
         )
 
-    # 3. Check Gentle Curiosity probe
-    probe = curiosity_engine.evaluate_turn_for_probe(req.message)
-    if probe:
-        response_text += f"\n\n💭 *{probe}*"
+    # 3. Check Gentle Curiosity probe (only in normal mode, not incognito)
+    probe = None
+    if not req.incognito:
+        probe = curiosity_engine.evaluate_turn_for_probe(req.message)
+        if probe:
+            response_text += f"\n\n💭 *{probe}*"
 
-    # 4. Instant WAL Write (Non-blocking)
-    turn = InteractionTurn(
-        session_id=req.session_id,
-        user_input=req.message,
-        assistant_response=response_text,
-    )
-    wal_logger.append_turn(turn)
-    ring_buffer.append(turn)
+    # 4. Instant WAL Write (Non-blocking) - Bypassed in incognito mode
+    turn_id = None
+    if not req.incognito:
+        turn = InteractionTurn(
+            session_id=req.session_id,
+            user_input=req.message,
+            assistant_response=response_text,
+        )
+        wal_logger.append_turn(turn)
+        ring_buffer.append(turn)
+        turn_id = turn.turn_id
 
     return {
-        "turn_id": turn.turn_id,
+        "turn_id": turn_id,
         "reply": response_text,
         "probed": bool(probe),
+        "incognito": req.incognito,
     }
 
 
@@ -175,6 +206,40 @@ def delete_memory(node_id: str):
     if not success:
         raise HTTPException(status_code=404, detail="Memory node not found")
     return {"status": "deleted", "id": node_id}
+
+
+@app.put("/api/memories/{node_id}")
+def update_memory(node_id: str, req: MemoryUpdateRequest):
+    """In-place update / override of an existing memory node."""
+    node = graph_store.get_node_by_id(node_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Memory node not found")
+
+    updated_subject = req.subject if req.subject is not None else node.subject
+    updated_predicate = req.predicate if req.predicate is not None else node.predicate
+    updated_object = req.object if req.object is not None else node.object
+    updated_category = req.category if req.category is not None else node.category
+    updated_confidence = req.confidence if req.confidence is not None else node.confidence
+    updated_ymyl = req.ymyl_protected if req.ymyl_protected is not None else node.ymyl_protected
+
+    # Invalidate the old node
+    graph_store.invalidate_node(node.id)
+
+    # Commit updated node
+    new_node = conflict_resolver.resolve_and_commit(
+        subject=updated_subject,
+        predicate=updated_predicate,
+        object_=updated_object,
+        category=updated_category,
+        confidence=updated_confidence,
+        ymyl_protected=updated_ymyl,
+    )
+    return {
+        "status": "updated",
+        "id": new_node.id,
+        "old_id": node.id,
+        "fact": new_node.to_readable_fact(),
+    }
 
 
 @app.post("/api/dream/trigger")
