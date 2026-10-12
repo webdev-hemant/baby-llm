@@ -13,7 +13,7 @@ def temp_wal(tmp_path):
     return WriteAheadLog(db=db)
 
 
-def test_append_and_retrieve_turn(temp_wal):
+def test_append_and_retrieve_unprocessed_turns(temp_wal):
     turn = InteractionTurn(
         user_input="I love hiking on Mount Rainier.",
         assistant_response="That sounds exhilarating!",
@@ -25,6 +25,10 @@ def test_append_and_retrieve_turn(temp_wal):
     assert unprocessed[0].turn_id == turn.turn_id
     assert unprocessed[0].user_input == "I love hiking on Mount Rainier."
     assert not unprocessed[0].processed_in_dream
+
+
+def test_append_and_retrieve_turn(temp_wal):
+    test_append_and_retrieve_unprocessed_turns(temp_wal)
 
 
 def test_mark_turns_processed(temp_wal):

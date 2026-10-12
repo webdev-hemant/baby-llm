@@ -125,8 +125,10 @@ Where:
 
 ## 6. Current Implementation Status & Outstanding Work
 
-* **Completed (95%)**:
+* **Completed (100%)**:
   * SQLite WAL storage, LanceDB, FastEmbed ONNX, FTS5 BM25, and RRF hybrid retrieval are completely implemented and passing tests.
   * Context Assembler and embedded Qwen2.5-0.5B inference engine operate self-contained inside Python.
-* **Remaining Action Item**:
-  * Add `llama-cpp-python`, `huggingface-hub`, and `pyyaml` to [`pyproject.toml`](file:///Users/admin/Desktop/corporate/projects/baby-llm/pyproject.toml) `dependencies` so that fresh environments install all runtime binaries automatically.
+  * Runtime dependencies (`llama-cpp-python`, `huggingface-hub`, `pyyaml`) added to [`pyproject.toml`](file:///Users/admin/Desktop/corporate/projects/baby-llm/pyproject.toml).
+  * Unit test suite ([`tests/unit/test_wal.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/tests/unit/test_wal.py), [`tests/unit/test_hybrid_retrieval.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/tests/unit/test_hybrid_retrieval.py)) fully updated, verified, and passing (16/16 tests passing across test suite).
+* **Remaining Action Items**:
+  * None. Milestone 1 is 100% complete, verified, and ready for Milestone 2 REM Dream engine ingestion.

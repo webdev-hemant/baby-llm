@@ -81,14 +81,14 @@ The full 12-week roadmap is partitioned into four decoupled, independently verif
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                       MILESTONES EXECUTION ROADMAP                          │
-├────────────┬──────────────────────────────────┬─────────────┬───────────────┤
-│ Milestone  │ Document                         │ Target Span │ Status        │
-├────────────┼──────────────────────────────────┼─────────────┼───────────────┤
-│ M1         │ MILESTONE_1_FAST_PATH_ENGINE.md  │ Weeks 1 - 3 │ Completed 95% │
-│ M2         │ MILESTONE_2_REM_DREAM_ENGINE.md  │ Weeks 4 - 6 │ Completed 85% │
-│ M3         │ MILESTONE_3_MCP_SERVER_AND_UI.md │ Weeks 7 - 9 │ Completed 80% │
-│ M4         │ MILESTONE_4_SUCCESS_AND_SYNC.md  │ Weeks 10-12 │ Partial   50% │
-└────────────┴──────────────────────────────────┴─────────────┴───────────────┘
+├───────────┬──────────────────────────────────┬─────────────┬────────────────┤
+│ Milestone │ Document                         │ Target Span │ Status         │
+├───────────┼──────────────────────────────────┼─────────────┼────────────────┤
+│ M1        │ MILESTONE_1_FAST_PATH_ENGINE.md  │ Weeks 1 - 3 │ Completed 100% │
+│ M2        │ MILESTONE_2_REM_DREAM_ENGINE.md  │ Weeks 4 - 6 │ Completed 85%  │
+│ M3        │ MILESTONE_3_MCP_SERVER_AND_UI.md │ Weeks 7 - 9 │ Completed 80%  │
+│ M4        │ MILESTONE_4_SUCCESS_AND_SYNC.md  │ Weeks 10-12 │ Partial   50%  │
+└───────────┴──────────────────────────────────┴─────────────┴────────────────┘
 ```
 
 ### [Milestone 1: Fast-Path Engine & WAL Store](file:///Users/admin/Desktop/corporate/projects/baby-llm/implementation/milestones/MILESTONE_1_FAST_PATH_ENGINE.md)
