@@ -44,6 +44,7 @@ class MemoryNode(BaseModel):
     predicate: str
     object: str
     category: MemoryCategory = MemoryCategory.PREFERENCE
+    scope: str = "global"
     confidence: float = 1.0
     stability: float = 1.0
     last_reinforced_at: datetime = Field(default_factory=utc_now)

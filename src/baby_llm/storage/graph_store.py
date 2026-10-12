@@ -20,11 +20,11 @@ class BiTemporalGraphStore:
             conn.execute(
                 """
                 INSERT INTO memory_nodes (
-                    id, subject, predicate, object, category,
+                    id, subject, predicate, object, category, scope,
                     confidence, stability, last_reinforced_at,
                     valid_from, invalid_from, ymyl_protected,
                     source_turn_id, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node.id,
@@ -32,6 +32,7 @@ class BiTemporalGraphStore:
                     node.predicate.strip().lower(),
                     stored_object,
                     node.category.value,
+                    node.scope.strip().lower() if node.scope else "global",
                     node.confidence,
                     node.stability,
                     node.last_reinforced_at.isoformat(),
@@ -77,28 +78,45 @@ class BiTemporalGraphStore:
                 return None
             return self._row_to_node(row)
 
-    def get_active_nodes(self, category: Optional[MemoryCategory] = None) -> List[MemoryNode]:
+    def get_active_nodes(
+        self,
+        category: Optional[MemoryCategory] = None,
+        scope: Optional[str] = None,
+    ) -> List[MemoryNode]:
         with self.db.get_connection() as conn:
+            query = "SELECT * FROM memory_nodes WHERE invalid_from IS NULL"
+            params = []
+
             if category:
-                cursor = conn.execute(
-                    "SELECT * FROM memory_nodes WHERE invalid_from IS NULL AND category = ? ORDER BY last_reinforced_at DESC",
-                    (category.value,),
-                )
-            else:
-                cursor = conn.execute(
-                    "SELECT * FROM memory_nodes WHERE invalid_from IS NULL ORDER BY last_reinforced_at DESC"
-                )
+                query += " AND category = ?"
+                params.append(category.value)
+
+            if scope and scope.lower() != "all":
+                query += " AND (scope = ? OR scope = 'global')"
+                params.append(scope.strip().lower())
+
+            query += " ORDER BY last_reinforced_at DESC"
+            cursor = conn.execute(query, tuple(params))
             return [self._row_to_node(r) for r in cursor.fetchall()]
 
-    def find_active_by_subject_predicate(self, subject: str, predicate: str) -> List[MemoryNode]:
+    def find_active_by_subject_predicate(
+        self,
+        subject: str,
+        predicate: str,
+        scope: Optional[str] = None,
+    ) -> List[MemoryNode]:
         with self.db.get_connection() as conn:
-            cursor = conn.execute(
-                """
+            query = """
                 SELECT * FROM memory_nodes
                 WHERE subject = ? AND predicate = ? AND invalid_from IS NULL
-                """,
-                (subject.strip().lower(), predicate.strip().lower()),
-            )
+            """
+            params = [subject.strip().lower(), predicate.strip().lower()]
+
+            if scope and scope.lower() != "all":
+                query += " AND (scope = ? OR scope = 'global')"
+                params.append(scope.strip().lower())
+
+            cursor = conn.execute(query, tuple(params))
             return [self._row_to_node(r) for r in cursor.fetchall()]
 
     def get_history_for_subject_predicate(self, subject: str, predicate: str) -> List[MemoryNode]:
@@ -114,6 +132,48 @@ class BiTemporalGraphStore:
             )
             return [self._row_to_node(r) for r in cursor.fetchall()]
 
+    def get_entity_subgraph(
+        self,
+        entity: str,
+        max_hops: int = 1,
+        scope: Optional[str] = None,
+    ) -> List[MemoryNode]:
+        """
+        Traverse 1-hop or 2-hop active memory connections centered on an entity.
+        Matches where entity is subject or contained in object.
+        """
+        clean_ent = entity.strip().lower()
+        active_nodes = self.get_active_nodes(scope=scope)
+        
+        # 1-Hop matching
+        first_hop = []
+        neighbor_entities = set()
+        for node in active_nodes:
+            s_match = (node.subject.lower() == clean_ent or clean_ent in node.subject.lower())
+            o_match = (clean_ent in node.object.lower())
+            if s_match or o_match:
+                first_hop.append(node)
+                neighbor_entities.add(node.subject.lower())
+                # Add token words from object if not too short
+                for tok in node.object.lower().split():
+                    if len(tok) > 3 and tok.isalnum():
+                        neighbor_entities.add(tok)
+
+        if max_hops <= 1 or not neighbor_entities:
+            return first_hop
+
+        # 2-Hop expansion
+        visited_ids = {n.id for n in first_hop}
+        second_hop = list(first_hop)
+        for node in active_nodes:
+            if node.id in visited_ids:
+                continue
+            if node.subject.lower() in neighbor_entities or any(n in node.object.lower() for n in neighbor_entities):
+                second_hop.append(node)
+                visited_ids.add(node.id)
+
+        return second_hop
+
     def delete_node(self, node_id: str) -> bool:
         """Glass-box action: Permanently erase a memory node and remove from FTS."""
         with self.db.get_connection() as conn:
@@ -128,12 +188,20 @@ class BiTemporalGraphStore:
         else:
             plain_object = raw_object
 
+        scope_val = "global"
+        try:
+            if "scope" in row.keys() and row["scope"]:
+                scope_val = row["scope"]
+        except Exception:
+            pass
+
         return MemoryNode(
             id=row["id"],
             subject=row["subject"],
             predicate=row["predicate"],
             object=plain_object,
             category=MemoryCategory(row["category"]),
+            scope=scope_val,
             confidence=float(row["confidence"]),
             stability=float(row["stability"]),
             last_reinforced_at=datetime.fromisoformat(row["last_reinforced_at"]),

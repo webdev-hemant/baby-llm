@@ -29,6 +29,27 @@ JSON ONLY:
 """
 
 
+AGENT_REMEMBER_PROMPT = """You are a technical knowledge extraction engine.
+Analyze the following statement, architectural rule, or constraint:
+"{text}"
+
+Extract the atomic facts, technical constraints, or architectural rules.
+Output a strict JSON array of objects with the schema:
+[
+  {
+    "subject": "entity or user (e.g. team, project, user)",
+    "predicate": "relationship or rule (e.g. enforces, forbids, uses, prefers, avoids)",
+    "object": "target value or technology",
+    "category": "work | preference | goal",
+    "confidence": 0.95,
+    "ymyl": false
+  }
+]
+Do not invent facts not in the statement.
+JSON ONLY:
+"""
+
+
 class FactExtractor:
     def __init__(self, provider=llm_provider):
         self.provider = provider
@@ -47,6 +68,36 @@ class FactExtractor:
         except Exception:
             # Fallback heuristic parser if local LLM is offline or returns malformed text
             return self._heuristic_fallback(turn.user_input)
+
+    def extract_from_text(self, text: str) -> List[Dict[str, Any]]:
+        """Extract atomic facts from free-form natural language text."""
+        clean = text.strip()
+        messages = [
+            {"role": "user", "content": AGENT_REMEMBER_PROMPT.replace("{text}", clean)},
+        ]
+
+        try:
+            raw_response = self.provider.chat_sync(messages)
+            results = self._parse_json_response(raw_response)
+            if results:
+                return results
+        except Exception:
+            pass
+
+        # Try heuristic fallback
+        heuristics = self._heuristic_fallback(clean)
+        if heuristics:
+            return heuristics
+
+        # Default fallback: structured single fact
+        return [{
+            "subject": "user",
+            "predicate": "noted",
+            "object": clean,
+            "category": MemoryCategory.PREFERENCE,
+            "confidence": 0.9,
+            "ymyl": False,
+        }]
 
     def _parse_json_response(self, text: str) -> List[Dict[str, Any]]:
         clean_text = text.strip()

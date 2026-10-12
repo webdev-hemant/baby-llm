@@ -23,13 +23,14 @@ class ConflictResolver:
         predicate: str,
         object_: str,
         category: MemoryCategory = MemoryCategory.PREFERENCE,
+        scope: str = "global",
         confidence: float = 1.0,
         ymyl_protected: bool = False,
         source_turn_id: Optional[str] = None,
     ) -> MemoryNode:
         """
-        Applies Bi-temporal resolution:
-        1. Checks for existing active node matching (subject, predicate).
+        Applies Bi-temporal resolution with scope isolation:
+        1. Checks for existing active node matching (subject, predicate) in scope.
         2. If found and object differs:
            - Marks old node as invalid_from = now.
            - Embeds and inserts new active node.
@@ -39,7 +40,7 @@ class ConflictResolver:
            - Inserts and embeds new node.
         """
         now = datetime.now(timezone.utc)
-        active_matches = self.graph.find_active_by_subject_predicate(subject, predicate)
+        active_matches = self.graph.find_active_by_subject_predicate(subject, predicate, scope=scope)
 
         for old_node in active_matches:
             if old_node.object.lower() == object_.strip().lower():
@@ -57,6 +58,7 @@ class ConflictResolver:
             predicate=predicate,
             object=object_,
             category=category,
+            scope=scope.strip().lower() if scope else "global",
             confidence=confidence,
             stability=1.0,
             last_reinforced_at=now,

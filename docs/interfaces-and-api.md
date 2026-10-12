@@ -37,10 +37,14 @@ The **Model Context Protocol (MCP)** server (`src/baby_llm/mcp/server.py`) is Ba
                ▼ (stdio JSON-RPC protocol)
 ┌────────────────────────────────────────────────────────────────────────┐
 │ baby-llm mcp (FastMCP Server: baby-llm-mcp)                            │
-│   ├─ recall_memory(query, top_k)                                       │
-│   ├─ commit_fact(subject, predicate, object, category, ymyl)           │
-│   ├─ get_active_goals()                                                │
-│   └─ record_daily_win(note)                                            │
+│   ├─ remember(text, category, scope) ──► Natural language ingestion    │
+│   ├─ recall_memory(query, scope, top_k, category) ──► Scoped recall    │
+│   ├─ verify_against_memory(proposal, scope) ──► Invariant guardrail    │
+│   ├─ get_entity_subgraph(entity, max_hops, scope) ──► Graph hops       │
+│   ├─ commit_fact(subject, predicate, object, category, scope)          │
+│   ├─ get_active_goals() & record_daily_win(note)                       │
+│   ├─ Resources: memory://rules/{scope}, memory://active-goals          │
+│   └─ Prompts: agent-kickoff                                            │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
@@ -49,33 +53,71 @@ The **Model Context Protocol (MCP)** server (`src/baby_llm/mcp/server.py`) is Ba
 
 ### 2.1 Available MCP Tool Primitives
 
-Baby LLM registers four high-level tools via FastMCP:
+Baby LLM registers seven high-level agent tools via FastMCP:
 
-#### Tool 1: `recall_memory`
-Retrieves verified personal and project facts matching a semantic query in sub-30ms using Reciprocal Rank Fusion (RRF).
+#### Tool 1: `remember`
+Zero-friction natural language memory ingestion. The agent provides natural language statements without needing to parse Subject-Predicate-Object triples.
+- **Arguments**:
+  - `text` (`string`, required): Free-form fact or rule (e.g., `"We enforce Vanilla CSS; TailwindCSS is strictly forbidden"`).
+  - `category` (`string`, optional, default: `"work"`): Category tag (`work`, `preference`, `identity`, `lifestyle`, `goal`, `health`, `finance`).
+  - `scope` (`string`, optional, default: `"global"`): Workspace or repository namespace (e.g. `"repo:baby-llm"`).
+- **Return Value**:
+  `Remembered fact: 'We enforce Vanilla CSS; TailwindCSS is strictly forbidden' [Scope: repo:baby-llm | ID: 3c8e41]`
+
+#### Tool 2: `recall_memory`
+Retrieves verified personal and project facts matching a semantic query in sub-30ms using Reciprocal Rank Fusion (RRF), automatically scoped to the active workspace.
 - **Arguments**:
   - `query` (`string`, required): Natural language search query (e.g., `"Project Phoenix database choice"`).
+  - `scope` (`string`, optional, default: `"global"`): Workspace or repository namespace. Returns memories matching the given scope plus `"global"`.
   - `top_k` (`integer`, optional, default: `5`): Maximum number of memories to return.
+  - `category` (`string`, optional): Optional category filter.
 - **Return Value**:
   Formatted list of verified facts with category and confidence score:
   ```text
-  - [GOAL] user goal_is launch Project Phoenix (Confidence: 95%, Source: hybrid)
-  - [WORK] user tech_stack FastAPI LanceDB SQLite (Confidence: 100%, Source: bm25)
-  - [PREFERENCE] user avoids TailwindCSS (Confidence: 90%, Source: vector)
+  - [GOAL] user goal_is launch Project Phoenix (Scope: repo:phoenix, Confidence: 95%, Source: hybrid)
+  - [WORK] user tech_stack FastAPI LanceDB SQLite (Scope: repo:phoenix, Confidence: 100%, Source: bm25)
+  - [PREFERENCE] user avoids TailwindCSS (Scope: global, Confidence: 90%, Source: vector)
   ```
 
-#### Tool 2: `commit_fact`
+#### Tool 3: `verify_against_memory`
+Architectural guardrail and invariant policy checker. Evaluates an intended code modification or architecture decision against known memories to detect violations before writing code.
+- **Arguments**:
+  - `proposal` (`string`, required): The technical plan or decision (e.g., `"Add TailwindCSS and create tailwind.config.js"`).
+  - `scope` (`string`, optional, default: `"global"`): Workspace or repository namespace.
+- **Return Value**:
+  ```text
+  ⚠️ INVARIANT VIOLATION DETECTED:
+  - Conflicting Memory: [PREFERENCE] user avoids TailwindCSS; prefers Vanilla CSS (ID: 8a1b2c)
+  - Rule: Codebase policy requires Vanilla CSS; utility frameworks are prohibited.
+  ```
+
+#### Tool 4: `get_entity_subgraph`
+Relational graph traversal exploring multi-hop connections around a key project entity.
+- **Arguments**:
+  - `entity` (`string`, required): Root entity name (e.g., `"project_phoenix"`).
+  - `max_hops` (`integer`, optional, default: `1`): Traversal depth (1 or 2 hops).
+  - `scope` (`string`, optional, default: `"global"`): Workspace namespace.
+- **Return Value**:
+  ```text
+  Entity: project_phoenix
+  ├── [implements] ──► fastmcp_stdio_server
+  ├── [uses_database] ──► sqlite_lancedb
+  └── [status] ──► in_progress
+  ```
+
+#### Tool 5: `commit_fact`
 Allows an external agent to explicitly commit or update a structured fact in the bi-temporal knowledge graph.
 - **Arguments**:
   - `subject` (`string`, required): The entity subject (e.g., `"project_phoenix"`).
   - `predicate` (`string`, required): The relationship predicate (e.g., `"uses_database"`).
   - `object_` (`string`, required): The target value (e.g., `"sqlite_lancedb"`).
   - `category` (`string`, optional, default: `"preference"`): One of `identity`, `preference`, `relationship`, `work`, `lifestyle`, `health`, `finance`, `goal`.
+  - `scope` (`string`, optional, default: `"global"`): Workspace namespace.
   - `ymyl_protected` (`boolean`, optional, default: `false`): If true, fact receives infinite retention and AES-GCM-256 encryption.
 - **Return Value**:
   `Successfully committed memory node: project_phoenix uses_database sqlite_lancedb (ID: a1b2c3d4)`
 
-#### Tool 3: `get_active_goals`
+#### Tool 6: `get_active_goals`
 Surfaces all active personal and project commitments currently tracked by the success engine.
 - **Arguments**: None.
 - **Return Value**:
@@ -84,7 +126,7 @@ Surfaces all active personal and project commitments currently tracked by the su
   - [PENDING] Complete code review for PR #126
   ```
 
-#### Tool 4: `record_daily_win`
+#### Tool 7: `record_daily_win`
 Allows an agent to record an accomplishment or breakthrough on behalf of the user.
 - **Arguments**:
   - `note` (`string`, required): Description of the accomplishment (e.g., `"Refactored MCP server to support streaming"`).
@@ -93,7 +135,17 @@ Allows an agent to record an accomplishment or breakthrough on behalf of the use
 
 ---
 
-### 2.2 Client Configuration
+### 2.2 Dynamic MCP Resources & Prompts
+
+Baby LLM exposes dynamic resources and prompt templates for zero-tool-call context injection:
+
+- **Resource: `memory://rules/{scope}`**: Auto-injects all active architectural rules, preferences, and constraints for the specified repository or project.
+- **Resource: `memory://active-goals`**: Auto-injects current active commitments and deadlines.
+- **Prompt: `agent-kickoff`**: Bootstraps an agent session with active goals, repository rules, and recent daily wins in a single action.
+
+---
+
+### 2.3 Client Configuration
 
 #### Configuration for Claude Desktop
 Add the following to your Claude Desktop configuration file:
@@ -124,7 +176,7 @@ Add the following to your Claude Desktop configuration file:
 
 ---
 
-### 2.3 Programmatic Python Agent Client
+### 2.4 Programmatic Python Agent Client
 External Python agents (e.g., LangGraph, CrewAI, AutoGen) can launch and communicate with `baby-llm mcp` directly:
 
 ```python

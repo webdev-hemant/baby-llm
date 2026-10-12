@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS memory_nodes (
     predicate TEXT NOT NULL,
     object TEXT NOT NULL,
     category TEXT CHECK(category IN ('lifestyle', 'health', 'finance', 'work', 'relationship', 'goal', 'preference')),
+    scope TEXT DEFAULT 'global',
     confidence REAL DEFAULT 1.0,
     stability REAL DEFAULT 1.0,
     last_reinforced_at TIMESTAMP NOT NULL,
@@ -97,7 +98,17 @@ class DatabaseManager:
     def _ensure_db(self) -> None:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         with self.get_connection() as conn:
+            # Idempotent migration: ensure scope column exists on pre-existing tables
+            try:
+                cursor = conn.execute("PRAGMA table_info(memory_nodes)")
+                cols = [row["name"] for row in cursor.fetchall()]
+                if cols and "scope" not in cols:
+                    conn.execute("ALTER TABLE memory_nodes ADD COLUMN scope TEXT DEFAULT 'global'")
+            except Exception:
+                pass
+
             conn.executescript(SCHEMA_SQL)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_memory_scope ON memory_nodes (scope)")
 
     @contextmanager
     def get_connection(self) -> Generator[sqlite3.Connection, None, None]:

@@ -2,7 +2,7 @@
 
 from typing import Dict, List, Optional
 from baby_llm.config import settings
-from baby_llm.core.models import RetrievedMemory
+from baby_llm.core.models import MemoryCategory, RetrievedMemory
 from baby_llm.retrieval.bm25 import BM25Retriever, bm25_retriever
 from baby_llm.retrieval.embedder import LocalEmbedder, get_embedder
 from baby_llm.storage.graph_store import BiTemporalGraphStore, graph_store
@@ -30,19 +30,25 @@ class HybridRetriever:
             self._embedder = get_embedder()
         return self._embedder
 
-    def retrieve(self, query: str, top_k: int = settings.hybrid_top_k) -> List[RetrievedMemory]:
+    def retrieve(
+        self,
+        query: str,
+        top_k: int = settings.hybrid_top_k,
+        scope: Optional[str] = "global",
+        category: Optional[MemoryCategory] = None,
+    ) -> List[RetrievedMemory]:
         """
         Executes sub-20ms hybrid retrieval:
         1. BM25 rank over SQLite FTS5.
         2. Cosine distance rank over LanceDB.
-        3. Reciprocal Rank Fusion calculation.
+        3. Reciprocal Rank Fusion calculation with scope/category filtering.
         """
         # 1. BM25 Search
-        bm25_matches = self.bm25.search(query, top_k=top_k * 2)
+        bm25_matches = self.bm25.search(query, top_k=top_k * 3)
 
         # 2. Vector Search
         query_vector = self.embedder.embed_text(query)
-        vector_matches = self.vec_store.search_similar(query_vector, top_k=top_k * 2, active_only=True)
+        vector_matches = self.vec_store.search_similar(query_vector, top_k=top_k * 3, active_only=True)
 
         # 3. Reciprocal Rank Fusion (RRF)
         rrf_scores: Dict[str, float] = {}
@@ -63,12 +69,19 @@ class HybridRetriever:
                 sources[node_id] = "vector"
 
         # Sort by final RRF score descending
-        sorted_nodes = sorted(rrf_scores.items(), key=lambda item: item[1], reverse=True)[:top_k]
+        sorted_nodes = sorted(rrf_scores.items(), key=lambda item: item[1], reverse=True)
 
         results: List[RetrievedMemory] = []
         for node_id, score in sorted_nodes:
+            if len(results) >= top_k:
+                break
             node = self.graph.get_node_by_id(node_id)
             if node and node.is_active:
+                if category and node.category != category:
+                    continue
+                if scope and scope.lower() != "all":
+                    if node.scope.lower() != scope.lower() and node.scope.lower() != "global":
+                        continue
                 # Spaced repetition reinforcement
                 self.graph.reinforce_node(node.id)
                 results.append(

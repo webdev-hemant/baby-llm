@@ -54,10 +54,16 @@ Baby LLM orchestrates cognitive data flow across three specialized interaction m
 Autonomous coding agents (Cursor IDE, Windsurf), reasoning assistants (Claude Desktop), and multi-agent orchestrators (CrewAI, LangGraph, AutoGen) require durable, structured memory across sessions. Baby LLM acts as their sovereign sidecar:
 - **FastMCP Stdio Transport**: Native JSON-RPC tool calling without opening external network ports.
 - **Agent Primitives**:
-  - `recall_memory(query, top_k)`: Executes sub-30ms Reciprocal Rank Fusion over SQLite FTS5 (BM25) and LanceDB dense vectors.
-  - `commit_fact(subject, predicate, object, category, ymyl)`: Directly injects verified facts into the bi-temporal knowledge graph with immediate conflict resolution.
-  - `get_active_goals()`: Surfaces open commitments, deadlines, and active projects.
-  - `record_daily_win(note)`: Commits completed accomplishments to the daily record.
+  - `remember(text, category, scope)`: Zero-friction natural language ingestion with automatic async consolidation.
+  - `recall_memory(query, scope, top_k, category)`: Sub-30ms Reciprocal Rank Fusion over SQLite FTS5 (BM25) and LanceDB dense vectors, isolated by repository/workspace.
+  - `verify_against_memory(proposal, scope)`: Active architectural guardrail checking proposals against known rules and invariants.
+  - `get_entity_subgraph(entity, max_hops, scope)`: Relational knowledge graph traversal for entity dependency inspection.
+  - `commit_fact(subject, predicate, object, category, scope, ymyl)`: Explicit bi-temporal fact commitment.
+  - `get_active_goals()` & `record_daily_win(note)`: Active milestone tracking and accomplishment logging.
+- **Zero-Turn Context Injection**:
+  - `memory://rules/{scope}`: Dynamic MCP resource exposing architectural guidelines.
+  - `memory://active-goals`: Dynamic MCP resource providing sprint commitments.
+  - `agent-kickoff`: Standard MCP prompt initializing agent sessions.
 - **REST Memory Bus**: For distributed or containerized agents, the FastAPI server exposes `/api/memories` and `/api/chat` over standard HTTP.
 
 ### 2.2 Substrate B: Human $\longleftrightarrow$ Companion Chat (Direct User Surface)
