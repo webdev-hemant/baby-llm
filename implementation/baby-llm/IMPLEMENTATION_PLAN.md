@@ -12,12 +12,12 @@
 │                          BABY LLM RUNTIME TOPOLOGY                          │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-                  ┌─────────────────────────────────────────┐
-                  │           USER INTERFACES               │
-                  │  • Tauri v2 Desktop App                 │
-                  │  • Claude Desktop / Cursor (via MCP)    │
-                  │  • CLI & Raycast Quick Entry            │
-                  └────────────────────┬────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ USER INTERFACES & INTEGRATION HOOKS                                         │
+│ • Glass-Box Web Dashboard & PWA (Port 21225)                                │
+│ • Claude Desktop / Cursor / Zed (Universal MCP)                             │
+│ • Terminal CLI & Raycast Quick Entry                                        │
+└──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
                       User Prompt /    │ Streaming Response
                       Context Query    │ (< 30ms fast-path overhead)
@@ -54,8 +54,8 @@
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
 │   │ Quantized SLM Worker (Embedded Qwen2.5-0.5B-Instruct GGUF)          │   │
 │   │  • Step A: SPO Fact Extraction (Subject, Predicate, Object Triples) │   │
-│   │  • Step B: Bi-Temporal Conflict Resolution (valid_from/invalid_from)│   │
-│   │  • Step C: Ebbinghaus Retention Decay & Reinforcement Computation    │   │
+│   │  • Step B: Bi-Temporal Conflict Resolution (valid_from / to)        │   │
+│   │  • Step C: Ebbinghaus Retention Decay & Reinforcement Computation   │   │
 │   │  • Step D: YMYL Immunity Shield & Cold-Vault Archival               │   │
 │   └──────────────────────────────────┬──────────────────────────────────┘   │
 │                                      │                                      │
@@ -76,7 +76,7 @@
 
 ## 2. Target Directory & Module Structure
 
-The project will follow a clean, modular Python backend with an embedded Tauri v2 frontend shell.
+The project follows a clean, modular 100% Python architecture with an embedded Glass-Box web dashboard served directly via FastAPI.
 
 ```text
 personal_success-manager/
@@ -132,15 +132,11 @@ personal_success-manager/
 │       └── api/
 │           ├── __init__.py
 │           └── server.py             # FastAPI local REST & WebSocket service
-├── ui/                               # Tauri v2 Desktop Frontend
-│   ├── src-tauri/
-│   │   ├── Cargo.toml
-│   │   └── src/
-│   │       └── main.rs
-│   └── src/
-│       ├── index.html
-│       ├── styles.css
-│       └── app.js
+├── ui/                               # Glass-Box Web Dashboard & PWA
+│   ├── index.html                    # Glass-Box single-page interface
+│   ├── styles.css                    # Fluid, zero-scroll responsive theme
+│   ├── app.js                        # Dynamic REST/SSE reactive state engine
+│   └── manifest.json                 # PWA standalone desktop installation
 ├── tests/
 │   ├── unit/
 │   │   ├── test_wal.py
@@ -240,7 +236,7 @@ Where:
 │ PHASE 1: Fast-Path Engine & WAL Store                       (Weeks 1 - 3)   │
 │ • SQLite WAL logger & In-Memory Ring Buffer                                 │
 │ • LanceDB Vector Store + ONNX BGE Embeddings                                │
-│ • FTS5 BM25 + Vector Hybrid Retrieval (RRF)                                │
+│ • FTS5 BM25 + Vector Hybrid Retrieval (RRF)                                 │
 │ • Zero-lag Context Assembler + Embedded Qwen2.5-0.5B Engine                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ PHASE 2: The REM Dream Engine & Bi-Temporal Graph           (Weeks 4 - 6)   │
@@ -251,7 +247,7 @@ Where:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ PHASE 3: Universal MCP Server & Glass-Box Dashboard         (Weeks 7 - 9)   │
 │ • Model Context Protocol (MCP) Server (stdio/SSE)                           │
-│ • Tauri v2 Desktop UI with Mindstream, Timeline & Compass                   │
+│ • Glass-Box Web UI & PWA (Mindstream, Timeline & Compass)                   │
 │ • Direct user editing: Pin, Edit, Erase, Incognito Mode                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ PHASE 4: Proactive Success Agent & Local Ecosystem Sync    (Weeks 10 - 12)  │
@@ -347,16 +343,18 @@ Provide an open ecosystem interface for external tools (Cursor, Claude Desktop) 
      * `POST /api/memories/override`
      * `DELETE /api/memories/{id}`
      * `GET /api/success/compass`
-3. **Tauri v2 Desktop Application**
-   * Scaffold `ui/` with Tauri v2 (Rust backend + Vanilla CSS/HTML/JS for maximum speed and < 35MB RAM footprint).
+3. **Glass-Box Web Dashboard & PWA**
+   * Built-in browser/PWA UI served directly by FastAPI at port 21225 (Vanilla CSS/HTML/JS for instant load and < 30MB RAM footprint).
+   * Accessible via `baby-llm ui` CLI launcher or direct browser navigation to `http://127.0.0.1:21225`.
    * **Mindstream Panel**: Visual interactive cards showing newly consolidated facts with confidence tags.
    * **Bi-Temporal Timeline View**: Visual timeline showing past vs. present states.
    * **One-Click Erase & Edit**: Immediate user correction of any memory node.
    * **Incognito Mode**: Temporary toggle disabling WAL logging for sensitive chats.
+   * **PWA Standalone Mode**: Web app manifest (`manifest.json`) enabling one-click installation to macOS Dock or Windows Taskbar as an isolated window.
 
 #### Deliverables & Acceptance Criteria
 * Working integration with Claude Desktop and Cursor IDE via `baby-llm-mcp`.
-* Functional Tauri desktop client displaying memory nodes, success metrics, and offering full CRUD on memory nodes.
+* Functional Glass-Box web dashboard displaying memory nodes, success metrics, and offering full CRUD on memory nodes.
 
 ---
 
@@ -381,8 +379,8 @@ Transform Baby LLM from a passive memory store into an active personal success p
      * Reads user edits in Obsidian markdown files and propagates changes back to SQLite and LanceDB automatically.
 4. **Hardening, Security & Packaging**
    * Encrypt sensitive YMYL attributes using AES-GCM-256 with keys stored in the OS Keyring.
-   * Package Tauri application installers (macOS `.dmg` / `.app`, Linux `.deb`).
-   * Provide a one-command CLI installer (`pip install baby-llm` or `curl ... | sh`).
+   * Standard Python packaging via `pyproject.toml` (`pip install baby-llm` or `pip install -e .`).
+   * Streamlined CLI commands: `baby-llm chat`, `baby-llm serve`, `baby-llm ui`, `baby-llm dream`.
 
 #### Deliverables & Acceptance Criteria
 * Proactive briefing messages triggered on time.
@@ -395,7 +393,7 @@ Transform Baby LLM from a passive memory store into an active personal success p
 
 | Component | Technology | Footprint / Latency Budget |
 | :--- | :--- | :--- |
-| **Desktop Shell** | Web Dashboard & Tauri v2 Compatible | RAM: < 35MB |
+| **Glass-Box Dashboard** | Built-in Web UI & PWA (Port 21225) | RAM: < 30MB |
 | **Backend Core** | Python 3.12+ / FastAPI (Port 21225) | Idle RAM: ~60MB |
 | **Relational Storage** | SQLite (WAL mode) | Read/Write: < 2ms |
 | **Vector DB** | LanceDB (columnar, disk-native) | Search: < 10ms for 100k vectors |
