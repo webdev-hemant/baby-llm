@@ -137,13 +137,16 @@ Where:
   * `test_stability_extension()`: Verifies extended retention when stability increases.
 * [`tests/integration/test_dream_cycle.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/tests/integration/test_dream_cycle.py):
   * `test_full_dream_consolidation_and_contradiction()`: Simulates end-to-end conversation ingestion, extraction, contradiction resolution, and decay pruning.
+  * `test_dream_worker_background_daemon()`: Validates autonomous idle background thread execution, user activity pause, and graceful termination.
 
 ---
 
 ## 6. Current Implementation Status & Outstanding Work
 
-* **Completed (85%)**:
+* **Completed (100%)**:
   * Bi-temporal graph store, SPO fact extractor, contradiction resolver, and Ebbinghaus decay engine are completely implemented and pass all tests.
-  * Full consolidation cycle callable programmatically and via CLI (`baby-llm dream`).
-* **Remaining Action Item**:
-  * Implement the continuous background daemon thread in [`worker.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/dream/worker.py) to automatically monitor OS idle time (e.g. 15 minutes of inactivity) and 03:00 AM cron, with immediate concurrency pause when user activity resumes.
+  * Autonomous background daemon thread implemented in [`worker.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/dream/worker.py) monitoring OS idle threshold and 03:00 AM nightly cron, with immediate concurrency pause on user activity.
+  * Full consolidation cycle callable programmatically, via background daemon, and via CLI (`baby-llm dream`).
+  * Automated integration test suite updated and passing (17/17 tests across the project).
+* **Remaining Action Items**:
+  * None. Milestone 2 is 100% complete, verified, and ready for Milestone 3 Universal MCP & Glass-Box UI integration.

@@ -68,3 +68,62 @@ def test_full_dream_consolidation_and_contradiction(integrated_system):
     assert history[0].invalid_from is not None
     assert "tokyo" in history[1].object.lower()
     assert history[1].invalid_from is None
+
+
+def test_dream_worker_background_daemon(tmp_path):
+    import time
+
+    class FastMockExtractor:
+        def extract_from_turn(self, turn):
+            return [{
+                "subject": "user",
+                "predicate": "reads",
+                "object": "philosophy",
+                "category": "preference",
+                "confidence": 1.0,
+                "ymyl": False,
+            }]
+
+    db_path = tmp_path / "daemon_test.sqlite3"
+    lance_path = tmp_path / "lancedb_daemon"
+    db = DatabaseManager(db_path=db_path)
+    wal = WriteAheadLog(db=db)
+    graph = BiTemporalGraphStore(db=db)
+    vec_store = LanceVectorStore(db_path=lance_path)
+    resolver = ConflictResolver(graph=graph, vec_store=vec_store)
+    decay = EbbinghausDecayEngine(graph=graph, vec_store=vec_store)
+    worker = DreamWorker(
+        wal=wal,
+        extractor=FastMockExtractor(),
+        resolver=resolver,
+        decay=decay,
+    )
+
+    # Verify daemon start and running state
+    assert not worker.is_running
+    worker.start_background_daemon(idle_seconds=0.05, check_interval=0.02)
+    assert worker.is_running
+
+    # Add a turn to WAL
+    turn = InteractionTurn(
+        user_input="I prefer reading books on philosophy.",
+        assistant_response="Philosophy offers profound perspectives.",
+    )
+    wal.append_turn(turn)
+    assert len(wal.get_unprocessed_turns()) == 1
+
+    # Wait for idle timeout (0.05s) to trigger consolidation
+    for _ in range(30):
+        if len(wal.get_unprocessed_turns()) == 0:
+            break
+        time.sleep(0.02)
+
+    assert len(wal.get_unprocessed_turns()) == 0
+
+    # Test user activity pause mechanism
+    worker.record_user_activity()
+    assert worker.is_paused
+
+    # Stop daemon gracefully
+    worker.stop_background_daemon(timeout=2.0)
+    assert not worker.is_running
