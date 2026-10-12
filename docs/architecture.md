@@ -1,12 +1,12 @@
 # 🏛️ System Architecture & Runtime Topology
 
-*System Topology, 4-Tier Memory Hierarchy, Runtime Lifecycles, Subsystem Interactions, and Concurrency*
+*Tripartite Interaction Model, Sub-30ms Agent Substrate, 4-Tier Memory Hierarchy, Runtime Lifecycles, and Concurrency*
 
 ---
 
 ## 1. Architectural Philosophy & Design Principles
 
-Baby LLM is architected around four core design tenets that distinguish it from conventional AI agents and cloud-hosted memory services:
+Baby LLM is engineered as a **sovereign long-term memory engine and cognitive substrate**. Unlike monolithic chatbots or third-party cloud memory SaaS, it decouples fast-path memory retrieval for autonomous agents from asynchronous subconscious consolidation:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -14,61 +14,118 @@ Baby LLM is architected around four core design tenets that distinguish it from 
 ├────────────────────────┬───────────────────────────────────────────────┤
 │ Tenet                  │ Architectural Guarantee                       │
 ├────────────────────────┼───────────────────────────────────────────────┤
-│ 1. Offline Sovereignty │ Zero cloud calls; all data and weights local. │
-│ 2. Real-Time Fast-Path │ Strict fast-path and background separation.   │
-│ 3. Bi-Temporal Truth   │ Chronological history without data amnesia.   │
-│ 4. Glass-Box Control   │ Inspect, edit, pin, or erase any memory node. │
+│ 1. Sovereign Agent Hub │ 100% offline memory substrate for AI agents.  │
+│ 2. Sub-30ms Fast Path  │ Zero latency stalls for external tool calls.  │
+│ 3. Model-to-Model REM  │ Subconscious SLM extracts & prunes memories.  │
+│ 4. Bi-Temporal Truth   │ Chronological history without data amnesia.   │
 └────────────────────────┴───────────────────────────────────────────────┘
 ```
 
-### 1.1 The Fast-Path vs. Slow-Path Bifurcation
-Most experimental memory frameworks commit a fatal architectural flaw: they execute multi-shot LLM extraction prompts synchronously on every user chat turn. This imposes a 3-to-8 second latency penalty per message, breaking natural conversational cadence.
+---
 
-Baby LLM strictly decouples real-time conversational inference from cognitive consolidation:
-- **Synchronous Fast Path (<30ms)**: Memory retrieval (hybrid BM25 + dense vectors) and context compilation execute in milliseconds. The interaction turn is appended to a Write-Ahead Log (WAL) instantly without blocking the response.
-- **Asynchronous Slow Path (REM Dream Worker)**: Atomic fact extraction, bi-temporal conflict resolution, and scientific Ebbinghaus decay execute in the background when the user is idle or during nightly consolidation windows.
+## 2. The Tripartite Interaction Model
+
+Baby LLM orchestrates cognitive data flow across three specialized interaction modalities:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│               THE TRIPARTITE INTERACTION ARCHITECTURE                  │
+├────────────────────────────────────────────────────────────────────────┤
+│ 1. EXTERNAL AGENT <──> MEMORY TOOL (Primary Substrate)                 │
+│    • Protocol: FastMCP (stdio JSON-RPC) & FastAPI REST (/api/memories) │
+│    • Clients: Cursor IDE, Claude Desktop, CrewAI, AutoGen, LangGraph   │
+│    • Primitives: recall_memory(), commit_fact(), get_active_goals()    │
+│    • Performance: Sub-30ms hybrid RRF recall; zero cloud leakage       │
+├────────────────────────────────────────────────────────────────────────┤
+│ 2. HUMAN <──> COMPANION CHAT (Direct User Surface)                     │
+│    • Interface: Interactive Terminal CLI & Glass-Box Web Dashboard     │
+│    • Capabilities: Real-time dialogue, Mindstream auditing, Morning    │
+│      Readiness briefs, one-click fact deletion, and goal tracking      │
+├────────────────────────────────────────────────────────────────────────┤
+│ 3. INTERNAL MODEL <──> MODEL PROCESSING (Subconscious Engine)          │
+│    • Engine: Local SLM (SmolLM2-1.7B / Qwen2.5-0.5B GGUF)              │
+│    • Pipeline: Asynchronous REM Dream consolidation (15m idle / cron)  │
+│    • Operations: SPO triple extraction, contradiction resolution,      │
+│      Ebbinghaus decay curve evaluation, and YMYL protection floors     │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 2.1 Substrate A: External Agent $\longleftrightarrow$ Memory Tool (Primary Focus)
+Autonomous coding agents (Cursor IDE, Windsurf), reasoning assistants (Claude Desktop), and multi-agent orchestrators (CrewAI, LangGraph, AutoGen) require durable, structured memory across sessions. Baby LLM acts as their sovereign sidecar:
+- **FastMCP Stdio Transport**: Native JSON-RPC tool calling without opening external network ports.
+- **Agent Primitives**:
+  - `recall_memory(query, top_k)`: Executes sub-30ms Reciprocal Rank Fusion over SQLite FTS5 (BM25) and LanceDB dense vectors.
+  - `commit_fact(subject, predicate, object, category, ymyl)`: Directly injects verified facts into the bi-temporal knowledge graph with immediate conflict resolution.
+  - `get_active_goals()`: Surfaces open commitments, deadlines, and active projects.
+  - `record_daily_win(note)`: Commits completed accomplishments to the daily record.
+- **REST Memory Bus**: For distributed or containerized agents, the FastAPI server exposes `/api/memories` and `/api/chat` over standard HTTP.
+
+### 2.2 Substrate B: Human $\longleftrightarrow$ Companion Chat (Direct User Surface)
+Human operators retain complete visibility and control over their memory substrate:
+- **Interactive Terminal CLI (`baby-llm chat`)**: Provides zero-latency conversational companionship, gentle curiosity probes, and manual dream triggers.
+- **Glass-Box Web Dashboard (`http://127.0.0.1:21225/`)**: Inspect the real-time Mindstream, filter memories by category, audit agent-created facts, and delete obsolete entries with a single click.
+- **Personal Success Compass**: Daily Morning Readiness Briefs (07:30 AM) and Nightly Reflections (21:30 PM).
+
+### 2.3 Substrate C: Internal Model $\longleftrightarrow$ Model Processing (Subconscious Engine)
+Consolidating, restructuring, and decaying memories requires semantic reasoning. Performing this during an active agent tool call wastes tokens and introduces 3–8 second latency delays. 
+- Baby LLM offloads all memory synthesis to an internal background SLM (`SmolLM2-1.7B` or `Qwen2.5-0.5B`).
+- While the host machine is idle, this internal model executes model-to-model consolidation: analyzing raw dialogue logs, extracting structured facts, resolving historical contradictions, and archiving trivial banter.
+- **Result**: External frontier agents (Claude 3.7 Sonnet, GPT-4o) never pay a token or latency tax for memory maintenance.
 
 ---
 
-## 2. System Topology & Subsystem Interactions
+## 3. System Topology & Subsystem Interactions
 
 The Baby LLM architecture spans four distinct vertical layers:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   BABY LLM SYSTEM COMPONENT TOPOLOGY                   │
+│                       BABY LLM TOPOLOGY OVERVIEW                       │
 └────────────────────────────────────────────────────────────────────────┘
 
- [Interface Layer]
-   ├─ Glass-Box Web Dashboard (Vanilla JS + Glassmorphic CSS, PWA)
-   ├─ Interactive Terminal CLI (baby_llm.cli: chat, dream, memories)
-   ├─ Universal MCP Server (FastMCP: stdio JSON-RPC protocol)
-   └─ FastAPI REST Engine (Port 21225: /api/chat, /api/memories)
-         │
-         ▼
+ [External Agents & Clients]           [Human Interaction]
+   • Cursor IDE / Claude Desktop         • Terminal CLI (baby-llm chat)
+   • Autonomous Swarms (LangGraph)       • Glass-Box UI (Port 21225)
+   • REST Clients (Python httpx)         • Bidirectional Obsidian Vault
+          │                                     │
+          ▼ (FastMCP stdio & REST)              ▼ (Interactive Prompt)
 ┌────────────────────────────────────────────────────────────────────────┐
-│ RUNTIME & CONTEXT ASSEMBLY LAYER                                       │
-│   ├─ ContextAssembler: Sub-20ms prompt compiler                        │
-│   ├─ EpisodicRingBuffer: In-memory sliding window (last 15 turns)      │
-│   ├─ GentleCuriosityEngine: Subtle clarifying question state machine   │
-│   └─ UnifiedLLMProvider: Embedded Qwen2.5-0.5B (GGUF) + Ollama bridge  │
+│ DAYTIME FAST-PATH ENGINE (<30ms Latency Budget)                        │
+│   ├─ Episodic Ring Buffer (deque: in-RAM sliding window)               │
+│   ├─ Hybrid Retrieval (RRF: SQLite FTS5 BM25 + LanceDB BGE Vectors)    │
+│   ├─ FastMCP Server (recall_memory, commit_fact, get_active_goals)     │
+│   └─ Fast Inference (Embedded Qwen2.5-0.5B GGUF or Ollama Bridge)      │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼ [Zero-Blocking Append]
+┌────────────────────────────────────────────────────────────────────────┐
+│ WRITE-AHEAD INTERACTION LOG (WAL)                                      │
+│   └─ SQLite Embedded Table: interaction_log (WAL Mode Enabled)         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼ [Idle > 15m or 03:00 AM Cron]
+┌────────────────────────────────────────────────────────────────────────┐
+│ ASYNCHRONOUS REM DREAM CONSOLIDATION (Background Daemon)               │
+│   ├─ Fact Extractor: Atomic SPO Triples & Confidence Scores            │
+│   ├─ Conflict Resolver: Bi-Temporal Validity (valid_from / invalid)    │
+│   ├─ Ebbinghaus Decay: R(t) = exp(-t / (S * I))                        │
+│   └─ YMYL Shield: 100% Retention Floor for Health & Finance Facts      │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ STORAGE & BACKGROUND SUBSYSTEMS                                        │
-│   ├─ SQLite WAL: interaction_log, memory_nodes, memory_fts (FTS5)      │
-│   ├─ LanceDB: memories table (384-dim BGE vectors, cosine distance)    │
-│   ├─ YMYL Security: AES-GCM-256 attribute encryption (OS Keyring)      │
-│   ├─ REM Dream Worker: Background daemon for fact extraction & decay   │
-│   ├─ Success Agent: 07:30 Morning Brief & 21:30 Reflection loops       │
-│   └─ Obsidian Vault Sync: Watchdog observer for Markdown mirror        │
+│ PERSISTENT STORAGE & KNOWLEDGE SUBSTRATE                               │
+│   ├─ Bi-Temporal Knowledge Graph (SQLite: memory_nodes & FTS5)         │
+│   ├─ Dense Semantic Vector Store (LanceDB: memories table)             │
+│   ├─ AES-GCM-256 Keyring Encryption (At-rest protection for YMYL)      │
+│   ├─ Personal Success Compass (Morning Briefs & Commitment Tracker)    │
+│   └─ Bidirectional Obsidian Vault Sync (Watchdog Markdown Observer)    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. The 4-Tier Biological Memory Hierarchy
+## 4. The 4-Tier Biological Memory Hierarchy
 
 Baby LLM models human cognitive architecture across four specialized memory tiers:
 
@@ -99,104 +156,46 @@ Baby LLM models human cognitive architecture across four specialized memory tier
 - **Implementation**: `src/baby_llm/storage/graph_store.py` and `src/baby_llm/storage/vector_store.py`
 - **Structure**: Normalized SQLite table `memory_nodes` combined with LanceDB dense vector index `memories`.
 - **Key Fields**: Subject, Predicate, Object, Category, Confidence, Stability, `valid_from`, and `invalid_from`.
-- **Bi-Temporal Property**: When the user updates a fact (*"I lived in London"* $\to$ *"I moved to Tokyo"*), London's `invalid_from` timestamp is closed, Tokyo is committed with `valid_from = now`, and both records remain queryable for historical trajectory reconstruction.
+- **Bi-Temporal Property**: When a belief updates (*"We use PostgreSQL"* $	o$ *"We use SQLite"*), the outdated node is marked with `invalid_from = now`, the new node is committed with `valid_from = now`, and both records remain queryable for historical lineage reconstruction.
 
 ### Tier 4: Procedural Directives & Vault Markdown Sync
 - **Implementation**: `src/baby_llm/runtime/context_assembler.py` and `src/baby_llm/sync/obsidian_sync.py`
-- **Structure**: System-level persona definitions (`BASE_PERSONA_PROMPT`), daily morning briefs (`daily_summaries`), and bidirectional Markdown files in `~/.baby_llm/vault/memories/<node_id>.md`.
-- **Purpose**: Bridges structured database records into human-readable plain text files compatible with Obsidian, Logseq, or Git.
+- **Structure**: System persona prompts, daily morning summaries, and bidirectional Markdown files in `~/.baby_llm/vault/memories/<node_id>.md`.
+- **Purpose**: Bridges structured database records into human-readable plain text files compatible with Obsidian, Logseq, or Git version control.
 
 ---
 
-## 4. Runtime Execution Lifecycles
+## 5. Runtime Execution Lifecycles
 
-### 4.1 Real-Time Chat Pipeline (Synchronous Fast Path)
+### 5.1 External Agent Memory Tool Pipeline (Fast Path)
+When an external agent invokes `recall_memory(query)` or `commit_fact(...)`:
+1. **Query Parsing**: FastMCP or REST extracts tool arguments.
+2. **Hybrid Retrieval (<15ms)**:
+   - BM25 search across SQLite FTS5 index (`memory_fts`).
+   - FastEmbed 384-dimensional dense vector search in LanceDB.
+   - Reciprocal Rank Fusion ($k=60$) ranks the top matching active memory nodes.
+3. **Memory Reinforcement**: Each recalled node has its stability doubled ($S \leftarrow 2S$) to reflect active utility.
+4. **Tool Return**: Instant formatted response returned to the agent loop (<18ms total overhead).
 
-```text
- [User Message]
-       │
-       ▼
- 1. Record User Activity ──► Immediately pauses any active Dream Worker
-       │
-       ▼
- 2. Hybrid Retrieval (<15ms)
-       ├─ SQLite FTS5 BM25 Search (top 10)
-       ├─ FastEmbed ONNX Dense Vector Search (top 10 cosine)
-       └─ Reciprocal Rank Fusion (RRF: k=60) ──► Top 5 Active Memories
-       │
-       ▼
- 3. Context Assembly (<2ms)
-       ├─ System Persona Prompt (BASE_PERSONA_PROMPT)
-       ├─ Injected Memories (Formatted Subject-Predicate-Object lines)
-       ├─ Injected Commitments (Active open goals with deadlines)
-       ├─ Episodic History (Deque turns from EpisodicRingBuffer)
-       └─ Current User Message
-       │
-       ▼
- 4. Unified Inference
-       ├─ Attempt Embedded Qwen2.5-0.5B-Instruct-GGUF (llama-cpp-python)
-       └─ Fallback to Local Ollama HTTP Daemon (http://localhost:11434)
-       │
-       ▼
- 5. Gentle Curiosity Probe Check
-       └─ Evaluates user message for ambiguous entities (max 1 probe/session)
-       │
-       ▼
- 6. Instant Asynchronous Append
-       ├─ Append Turn to SQLite WAL (interaction_log) [Non-blocking]
-       └─ Append Turn to Episodic Ring Buffer
-       │
-       ▼
- [Streaming or Single Turn Response Delivered to User]
-```
+### 5.2 Real-Time Human Chat Pipeline
+When a human chats via CLI or Web UI:
+1. **Record Activity**: Immediately sets `self._pause_event` to yield compute from any running Dream Worker.
+2. **Context Assembly (<20ms)**: Merges system persona, retrieved active memories, active goals, and episodic ring buffer.
+3. **Inference**: Dispatches prompt to embedded Qwen2.5-0.5B GGUF or local Ollama.
+4. **Append Log**: Writes turn to SQLite WAL (`interaction_log`) without blocking response streaming.
 
-### 4.2 Asynchronous REM Dream Consolidation Pipeline
-
-```text
- [Trigger: OS Idle Timeout (>=15m) OR Daily Nightly Cron (03:00 AM)]
-       │
-       ▼
- 1. Check User Activity State
-       └─ If user is actively typing, yield and postpone cycle
-       │
-       ▼
- 2. Ingest Unprocessed WAL Turns
-       └─ Fetch batch of turns where processed_in_dream = 0 (limit 50)
-       │
-       ▼
- 3. Atomic Fact Extraction (FactExtractor)
-       ├─ Local SLM parses turns into strict JSON array of SPO triples
-       └─ Heuristic Regex fallback if SLM returns malformed data
-       │
-       ▼
- 4. Bi-Temporal Contradiction Resolution (ConflictResolver)
-       ├─ Search existing active nodes matching (subject, predicate)
-       ├─ If identical object: Reinforce stability (S = S * 2.0)
-       ├─ If conflicting object:
-       │    ├─ Invalidate old node: invalid_from = now
-       │    ├─ Update old node status in LanceDB: is_active = False
-       │    └─ Commit new node with valid_from = now
-       └─ Generate 384-dim vector & upsert to LanceDB memories table
-       │
-       ▼
- 5. Mark WAL Turns as Processed
-       └─ UPDATE interaction_log SET processed_in_dream = 1 WHERE turn_id IN (...)
-       │
-       ▼
- 6. Scientific Ebbinghaus Decay Pruning (EbbinghausDecayEngine)
-       ├─ Calculate retention R(t) = exp(-t / (S * I)) for all active nodes
-       ├─ YMYL Shield: Health and finance facts locked to R(t) = 1.0
-       └─ If R(t) < 0.20:
-            ├─ Invalidate node in graph (invalid_from = now)
-            └─ Deactivate in LanceDB vector index (is_active = False)
-       │
-       ▼
- [Consolidation Cycle Complete: Logs turn counts and archived node metrics]
-```
+### 5.3 Asynchronous REM Dream Consolidation Pipeline
+When idle timeout (>15m) or the nightly cron (03:00 AM) triggers:
+1. **Idle Check**: Confirms zero user activity.
+2. **Batch Ingestion**: Reads up to 50 un-processed turns from `interaction_log`.
+3. **Fact Extraction (Internal SLM)**: Parses turns into atomic Subject-Predicate-Object triples with category tags.
+4. **Conflict Resolution**: Identifies historical contradictions, marks old records invalid, and commits new nodes.
+5. **Decay Evaluation**: Calculates retention $R(t) = \exp(-t / (S \cdot I))$. Nodes with $R(t) < 0.20$ (and not YMYL-shielded) are archived.
+6. **Vector Sync**: Embeds active facts into LanceDB.
 
 ---
 
-## 5. Concurrency, Threading, and Synchronization
+## 6. Concurrency, Threading, and Synchronization
 
 Baby LLM maintains thread safety across multi-threaded asynchronous daemons without distributed message brokers or heavy lock managers:
 
@@ -220,7 +219,7 @@ Baby LLM maintains thread safety across multi-threaded asynchronous daemons with
 
 ---
 
-## 6. Failure Modes & Resiliency Strategies
+## 7. Failure Modes & Resiliency Strategies
 
 | Subsystem Failure | Failure Detection | Automated Recovery / Fallback Behavior |
 | :--- | :--- | :--- |

@@ -1,6 +1,6 @@
 # 🚀 Getting Started with Baby LLM
 
-*Prerequisites, Installation, Quickstart Modes, First-Run Walkthrough, and Verification*
+*Prerequisites, Installation, Agent Quickstart, Operational Modes, and First-Run Verification*
 
 ---
 
@@ -89,9 +89,95 @@ positional arguments:
 
 ---
 
-## 3. The 5 Operational Quickstart Modes
+## 3. Autonomous Agent Quickstart (Cursor, Claude & Python)
 
-Baby LLM provides five distinct operational modes tailored to interactive chat, background services, developer tooling, and IDE integration.
+Connect Baby LLM as a persistent long-term memory tool for your AI agents in under 60 seconds:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                   UNIVERSAL MCP SERVER ARCHITECTURE                    │
+└────────────────────────────────────────────────────────────────────────┘
+
+ [Cursor IDE / Claude Desktop / Agent Swarm]
+               │
+               ▼ (stdio JSON-RPC protocol)
+┌────────────────────────────────────────────────────────────────────────┐
+│ baby-llm mcp (FastMCP Server)                                          │
+│   ├─ recall_memory(query, top_k)                                       │
+│   ├─ commit_fact(subject, predicate, object, category, ymyl)           │
+│   ├─ get_active_goals()                                                │
+│   └─ record_daily_win(note)                                            │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+ [Local SQLite Bi-Temporal Graph & LanceDB Vector Store (~/.baby_llm/)]
+```
+
+### 3.1 Configure Cursor IDE
+1. Open Cursor Settings (`Cmd + ,` or `Ctrl + ,`).
+2. Navigate to **Features** -> **MCP**.
+3. Click **+ Add New MCP Server**.
+4. Configure the server parameters:
+   - **Name**: `baby-llm`
+   - **Type**: `command`
+   - **Command**: `/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
+5. Click **Save** and verify the green status indicator.
+
+### 3.2 Configure Claude Desktop
+Open or create your Claude Desktop configuration file:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+Add the `baby-llm` entry:
+```json
+{
+  "mcpServers": {
+    "baby-llm": {
+      "command": "/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
+      "args": ["-m", "baby_llm.cli", "mcp"]
+    }
+  }
+}
+```
+
+### 3.3 Quick Python Agent Test Script
+Verify memory recall and commitment programmatically:
+```python
+import asyncio
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+server_params = StdioServerParameters(
+    command="/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
+    args=["-m", "baby_llm.cli", "mcp"],
+)
+
+async def main():
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            
+            # 1. Commit a project decision
+            await session.call_tool("commit_fact", {
+                "subject": "project_phoenix",
+                "predicate": "uses",
+                "object_": "sqlite_lancedb",
+                "category": "work"
+            })
+            
+            # 2. Recall the memory in <30ms
+            result = await session.call_tool("recall_memory", {"query": "project phoenix database"})
+            print("Recalled:", result.content[0].text)
+
+asyncio.run(main())
+```
+
+---
+
+## 4. The 5 Operational Launch Modes
+
+Baby LLM provides five distinct operational modes tailored to agent backends, human chat, and developer maintenance:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -99,22 +185,19 @@ Baby LLM provides five distinct operational modes tailored to interactive chat, 
 ├─────────────────┬──────────────────────────────────────────────────────┤
 │ Command         │ Operational Scope & Behavior                         │
 ├─────────────────┼──────────────────────────────────────────────────────┤
-│ baby-llm chat   │ Interactive terminal companion (<30ms fast-path)     │
+│ baby-llm mcp    │ Model Context Protocol stdio server for AI agents    │
 │ baby-llm serve  │ FastAPI REST server + Glass-Box UI on port 21225     │
+│ baby-llm chat   │ Interactive terminal companion (<30ms fast-path)     │
 │ baby-llm ui     │ Opens browser directly to http://127.0.0.1:21225/    │
 │ baby-llm dream  │ Headless REM dream memory consolidation trigger      │
-│ baby-llm mcp    │ Model Context Protocol stdio server for IDEs         │
 └─────────────────┴──────────────────────────────────────────────────────┘
 ```
 
-### Mode 1: Interactive Terminal Chat
-Chat directly with Baby LLM from your shell:
+### Mode 1: Universal MCP Server for Agents
+Launches the stdio JSON-RPC server used by Cursor IDE and Claude Desktop:
 ```bash
-.venv/bin/python -m baby_llm.cli chat
+.venv/bin/python -m baby_llm.cli mcp
 ```
-*Special Commands during chat:*
-- `/dream`: Manually triggers a REM Dream consolidation cycle right in your terminal.
-- `exit` or `quit`: Gracefully closes the session.
 
 ### Mode 2: Launch FastAPI Server & Glass-Box Dashboard
 Start the local REST server and background daemons:
@@ -128,36 +211,34 @@ By default, the server binds to `127.0.0.1:21225`.
 > - **Mnemonic Encoding**: `21225` spells **`B-A-B-Y`** (`B=2, A=1, B=2, Y=25`).
 > - **Collision Avoidance**: Situated in the user-registered port range (`1024`–`49151`), it prevents conflicts with Vite (`5173`), Next.js (`3000`), FastAPI/Django (`8000`), PostgreSQL (`5432`), and Ollama (`11434`).
 
-To specify a custom port or host:
+### Mode 3: Interactive Terminal Chat
+Chat directly with Baby LLM from your shell:
 ```bash
-.venv/bin/python -m baby_llm.cli serve --host 0.0.0.0 --port 21225
+.venv/bin/python -m baby_llm.cli chat
 ```
+*Special Commands during chat:*
+- `/dream`: Manually triggers a REM Dream consolidation cycle right in your terminal.
+- `exit` or `quit`: Gracefully closes the session.
 
-### Mode 3: Open the Web UI Dashboard
+### Mode 4: Open the Web UI Dashboard
 In a separate terminal (while `serve` is running), launch the Glass-Box dashboard:
 ```bash
 .venv/bin/python -m baby_llm.cli ui
 ```
 This opens `http://127.0.0.1:21225/` in your default browser.
 
-### Mode 4: Headless REM Dream Consolidation
+### Mode 5: Headless REM Dream Consolidation
 Trigger a one-shot background consolidation cycle without opening a chat session:
 ```bash
 .venv/bin/python -m baby_llm.cli dream
 ```
 This processes unflagged interaction logs, extracts atomic facts, resolves contradictions, and updates vector indices.
 
-### Mode 5: Inspect Stored Memories via CLI
-View active memory nodes stored in your local bi-temporal graph:
-```bash
-.venv/bin/python -m baby_llm.cli memories
-```
-
 ---
 
-## 4. End-to-End First-Run Walkthrough
+## 5. End-to-End First-Run Walkthrough
 
-Follow this step-by-step walkthrough to witness how Baby LLM absorbs personal context, recalls facts in real time, and resolves updates.
+Follow this step-by-step walkthrough to witness how Baby LLM absorbs context, recalls facts in real time, and resolves updates.
 
 ### Step 1: Launch Interactive Chat
 ```bash
@@ -219,60 +300,6 @@ Ask:
 You > Where do I live and what should I focus on?
 ```
 Baby LLM immediately recalls your home in Austin and your objective for Project Phoenix, citing your personal context without cloud latency.
-
----
-
-## 5. Universal MCP Server Setup (Cursor & Claude)
-
-Baby LLM includes a built-in Model Context Protocol (MCP) server running over standard I/O (`stdio`). This allows **Cursor IDE** and **Claude Desktop** to query and update your personal memory while you code or write.
-
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                   UNIVERSAL MCP SERVER ARCHITECTURE                    │
-└────────────────────────────────────────────────────────────────────────┘
-
- [Cursor IDE / Claude Desktop]
-               │
-               ▼ (stdio JSON-RPC protocol)
-┌────────────────────────────────────────────────────────────────────────┐
-│ baby-llm mcp (FastMCP Server)                                          │
-│   ├─ recall_memory(query, top_k)                                       │
-│   ├─ commit_fact(subject, predicate, object, category, ymyl)           │
-│   ├─ get_active_goals()                                                │
-│   └─ record_daily_win(note)                                            │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-                                    ▼
- [Local SQLite Bi-Temporal Graph & LanceDB Vector Store (~/.baby_llm/)]
-```
-
-### Configuration for Claude Desktop
-Open or create your Claude Desktop configuration file:
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
-
-Add the `baby-llm` server entry:
-```json
-{
-  "mcpServers": {
-    "baby-llm": {
-      "command": "/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
-      "args": ["-m", "baby_llm.cli", "mcp"]
-    }
-  }
-}
-```
-
-### Configuration for Cursor IDE
-1. Open Cursor Settings (`Cmd + ,` or `Ctrl + ,`).
-2. Navigate to **Features** -> **MCP**.
-3. Click **+ Add New MCP Server**.
-4. Configure the server parameters:
-   - **Name**: `baby-llm`
-   - **Type**: `command`
-   - **Command**: `/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
-5. Click **Save** and verify the green status indicator.
 
 ---
 

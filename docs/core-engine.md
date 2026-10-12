@@ -6,7 +6,7 @@
 
 ## 1. Fast-Path Context Assembler (`ContextAssembler`)
 
-The **Fast-Path Context Assembler** (`src/baby_llm/runtime/context_assembler.py`) is the real-time runtime engine responsible for synthesizing prompt payloads for local LLM inference under a strict **sub-30ms latency budget**.
+The **Fast-Path Context Assembler** (`src/baby_llm/runtime/context_assembler.py`) and **Hybrid Retrieval Engine** (`src/baby_llm/retrieval/hybrid.py`) provide the real-time runtime engine responsible for synthesizing prompt payloads and serving external agent memory queries (`recall_memory`) under a strict **sub-30ms latency budget**.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -95,6 +95,12 @@ By doubling stability upon every active recall, frequently referenced personal f
 ## 3. The REM Dream Consolidation Engine (`DreamWorker`)
 
 The **REM Dream Worker** (`src/baby_llm/dream/worker.py`) is an autonomous background thread executing memory consolidation.
+
+### 3.0 Model-to-Model Processing Paradigm
+In traditional multi-agent systems, external agents waste expensive frontier model tokens (and seconds of latency) asking LLMs to summarize, index, and organize their own memories. Baby LLM solves this by decoupling memory curation into an asynchronous **Model $\longleftrightarrow$ Model Processing** pipeline:
+- An embedded Small Language Model (SLM: `SmolLM2-1.7B` or `Qwen2.5-0.5B`) operates during idle cycles.
+- It parses raw dialogue logs from SQLite WAL into atomic Subject-Predicate-Object (SPO) triples, resolves historical contradictions, and applies Ebbinghaus decay math.
+- **Result**: External frontier agents (Cursor, Claude, LangGraph) stay focused on task execution and never pay a token or latency tax for memory maintenance.
 
 ### 3.1 Triggering Conditions & User Activity Debounce
 Consolidation triggers under two conditions:
