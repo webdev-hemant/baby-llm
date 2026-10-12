@@ -1,6 +1,6 @@
 """Unit tests for Ebbinghaus Decay and YMYL retention."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytest
 from baby_llm.core.models import MemoryCategory, MemoryNode
 from baby_llm.dream.decay import EbbinghausDecayEngine
@@ -15,7 +15,7 @@ def test_ymyl_retention_floor():
         object="penicillin",
         category=MemoryCategory.HEALTH,
         ymyl_protected=True,
-        last_reinforced_at=datetime.utcnow() - timedelta(days=100),
+        last_reinforced_at=datetime.now(timezone.utc) - timedelta(days=100),
     )
     r = engine.calculate_retention(health_node)
     assert r == 1.0
@@ -31,7 +31,7 @@ def test_ebbinghaus_decay_curve():
         category=MemoryCategory.PREFERENCE,
         stability=1.0,
         ymyl_protected=False,
-        last_reinforced_at=datetime.utcnow() - timedelta(days=30),
+        last_reinforced_at=datetime.now(timezone.utc) - timedelta(days=30),
     )
     r = engine.calculate_retention(trivia_node)
     # exp(-30 / (1 * 1)) should be extremely small (< 0.001)
@@ -48,7 +48,7 @@ def test_stability_extension():
         category=MemoryCategory.WORK,
         stability=8.0,
         ymyl_protected=False,
-        last_reinforced_at=datetime.utcnow() - timedelta(days=10),
+        last_reinforced_at=datetime.now(timezone.utc) - timedelta(days=10),
     )
     r = engine.calculate_retention(reinforced_node)
     # Importance for work is 2.0 -> exponent = -10 / (8 * 2) = -10/16 = -0.625 -> exp(-0.625) ~ 0.535

@@ -1,6 +1,6 @@
 """Commitments and goals state-machine tracker."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from baby_llm.core.models import Commitment, CommitmentStatus
 from baby_llm.storage.db import DatabaseManager, db_manager
@@ -46,7 +46,7 @@ class SuccessTracker:
         return commitment
 
     def update_status(self, commitment_id: str, new_status: CommitmentStatus) -> bool:
-        resolved_at = datetime.utcnow().isoformat() if new_status in (CommitmentStatus.COMPLETED, CommitmentStatus.DROPPED) else None
+        resolved_at = datetime.now(timezone.utc).isoformat() if new_status in (CommitmentStatus.COMPLETED, CommitmentStatus.DROPPED) else None
         with self.db.get_connection() as conn:
             cursor = conn.execute(
                 """

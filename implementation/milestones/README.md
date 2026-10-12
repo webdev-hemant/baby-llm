@@ -87,7 +87,7 @@ The full 12-week roadmap is partitioned into four decoupled, independently verif
 │ M1        │ MILESTONE_1_FAST_PATH_ENGINE.md  │ Weeks 1 - 3 │ Completed 100% │
 │ M2        │ MILESTONE_2_REM_DREAM_ENGINE.md  │ Weeks 4 - 6 │ Completed 100% │
 │ M3        │ MILESTONE_3_MCP_SERVER_AND_UI.md │ Weeks 7 - 9 │ Completed 100% │
-│ M4        │ MILESTONE_4_SUCCESS_AND_SYNC.md  │ Weeks 10-12 │ Partial   50%  │
+│ M4        │ MILESTONE_4_SUCCESS_AND_SYNC.md  │ Weeks 10-12 │ Completed 100% │
 └───────────┴──────────────────────────────────┴─────────────┴────────────────┘
 ```
 
@@ -152,7 +152,7 @@ The full 12-week roadmap is partitioned into four decoupled, independently verif
 │ G3 │ Memory Decay Mathematics    │ Strict Ebbinghaus curves  │ Verified     │
 │ G4 │ YMYL Category Immunity      │ 100% retention floor      │ Verified     │
 │ G5 │ Background Resource Ceiling │ SLM memory < 1.0GB RAM    │ Verified     │
-│ G6 │ MCP Client Compatibility    │ Cursor & Claude interoper │ Partial      │
+│ G6 │ MCP Client Compatibility    │ Cursor & Claude interoper │ Verified     │
 │ G7 │ Air-Gapped Privacy          │ 0 outbound cloud requests │ Verified     │
 └────┴─────────────────────────────┴───────────────────────────┴──────────────┘
 ```

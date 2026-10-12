@@ -1,7 +1,7 @@
 """Scientific Ebbinghaus Forgetting Curve and YMYL Retention Engine."""
 
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Tuple
 from baby_llm.core.models import MemoryNode
 from baby_llm.storage.graph_store import BiTemporalGraphStore, graph_store
@@ -29,7 +29,7 @@ class EbbinghausDecayEngine:
         if node.ymyl_protected:
             return 1.0
 
-        current_time = as_of or datetime.utcnow()
+        current_time = as_of or datetime.now(timezone.utc)
         elapsed_seconds = (current_time - node.last_reinforced_at).total_seconds()
         t_days = max(0.0, elapsed_seconds / 86400.0)
 
@@ -53,7 +53,7 @@ class EbbinghausDecayEngine:
         archived_ids = []
         surviving_ids = []
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for node in active_nodes:
             r = self.calculate_retention(node, as_of=now)
             if r < self.archive_threshold:

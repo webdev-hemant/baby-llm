@@ -121,13 +121,15 @@ valid_from: "2026-10-12T10:00:00"
 
 ## 6. Current Implementation Status & Outstanding Work
 
-* **Completed (50%)**:
-  * Morning intention brief synthesis with SQLite daily summary caching is implemented in [`src/baby_llm/success/agent.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/success/agent.py).
-  * Commitment CRUD operations and status transitions are implemented in [`src/baby_llm/success/tracker.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/success/tracker.py).
-  * Gentle Curiosity engine is implemented in [`src/baby_llm/success/curiosity.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/success/curiosity.py) and integrated into both the CLI chat loop and the FastAPI `/api/chat` route.
-  * Vault Markdown export and YAML safe-loading logic are written in [`src/baby_llm/sync/obsidian_sync.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/sync/obsidian_sync.py).
+* **Completed (100%)**:
+  * Morning intention brief synthesis with SQLite daily summary caching implemented in [`src/baby_llm/success/agent.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/success/agent.py).
+  * Commitment CRUD operations and status transitions implemented in [`src/baby_llm/success/tracker.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/success/tracker.py).
+  * Gentle Curiosity engine implemented in [`src/baby_llm/success/curiosity.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/success/curiosity.py) and integrated into both CLI chat loop and FastAPI `/api/chat` route.
+  * Vault Markdown export and YAML frontmatter serialization implemented in [`src/baby_llm/sync/obsidian_sync.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/sync/obsidian_sync.py).
+  * Live `watchdog.observers.Observer` filesystem daemon lifecycle (`start_observer`, `stop_observer`) actively wired to `~/BabyLLM/vault/memories/` and started in FastAPI lifespan.
+  * Autonomous background scheduler daemon (`start_scheduler`, `stop_scheduler`) triggering morning brief (07:30 AM) and nightly reflection (09:30 PM) automatically without manual polling.
+  * AES-GCM-256 attribute-level encryption for sensitive YMYL nodes implemented in [`src/baby_llm/security/encryption.py`](file:///Users/admin/Desktop/corporate/projects/baby-llm/src/baby_llm/security/encryption.py) backed by OS Keyring with 0600 local fallback.
+  * Added `baby-llm ui` CLI subcommand to automatically launch the default browser at `http://127.0.0.1:21225`.
+  * Comprehensive automated test suites passing with 100% test success (39 passed, 0 warnings).
 * **Remaining Action Items**:
-  * Wire the `watchdog.observers.Observer` instance to actively run in the background upon service startup (`baby-llm serve`).
-  * Implement an active background scheduling loop (e.g. APScheduler or asyncio cron loop) to trigger morning and evening briefs without requiring manual endpoint requests.
-  * Implement AES-GCM-256 attribute-level encryption for YMYL nodes using the system keyring.
-  * Add the `baby-llm ui` CLI subcommand to automatically open the default browser at `http://127.0.0.1:21225`.
+  * None. Milestone 4 is fully verified and 100% complete.

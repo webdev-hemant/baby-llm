@@ -67,7 +67,7 @@ class Commitment(BaseModel):
     description: Optional[str] = None
     status: CommitmentStatus = CommitmentStatus.PENDING
     target_deadline: Optional[datetime] = None
-    detected_at: datetime = Field(default_factory=datetime.utcnow)
+    detected_at: datetime = Field(default_factory=utc_now)
     resolved_at: Optional[datetime] = None
     associated_node_id: Optional[str] = None
 

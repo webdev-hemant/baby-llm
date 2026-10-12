@@ -1,6 +1,6 @@
 """Unit tests for Bi-Temporal Graph Store."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytest
 from baby_llm.core.models import MemoryCategory, MemoryNode
 from baby_llm.storage.db import DatabaseManager
@@ -36,12 +36,12 @@ def test_bi_temporal_invalidation_and_history(temp_graph):
         predicate="lives_in",
         object="Seattle",
         category=MemoryCategory.LIFESTYLE,
-        valid_from=datetime.utcnow() - timedelta(days=365),
+        valid_from=datetime.now(timezone.utc) - timedelta(days=365),
     )
     temp_graph.insert_node(node1)
 
     # 2. Invalidate node1 when user moves to Austin
-    move_date = datetime.utcnow()
+    move_date = datetime.now(timezone.utc)
     temp_graph.invalidate_node(node1.id, invalid_time=move_date)
 
     node2 = MemoryNode(

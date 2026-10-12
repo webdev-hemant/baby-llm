@@ -1,8 +1,9 @@
 """Bi-temporal Knowledge Graph store backed by SQLite."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from baby_llm.core.models import MemoryCategory, MemoryNode
+from baby_llm.security.encryption import ymyl_encryption
 from baby_llm.storage.db import DatabaseManager, db_manager
 
 
@@ -11,6 +12,10 @@ class BiTemporalGraphStore:
         self.db = db
 
     def insert_node(self, node: MemoryNode) -> MemoryNode:
+        stored_object = node.object.strip()
+        if node.ymyl_protected and not ymyl_encryption.is_encrypted(stored_object):
+            stored_object = ymyl_encryption.encrypt(stored_object)
+
         with self.db.get_connection() as conn:
             conn.execute(
                 """
@@ -25,7 +30,7 @@ class BiTemporalGraphStore:
                     node.id,
                     node.subject.strip().lower(),
                     node.predicate.strip().lower(),
-                    node.object.strip(),
+                    stored_object,
                     node.category.value,
                     node.confidence,
                     node.stability,
@@ -40,7 +45,7 @@ class BiTemporalGraphStore:
         return node
 
     def invalidate_node(self, node_id: str, invalid_time: Optional[datetime] = None) -> None:
-        invalid_iso = (invalid_time or datetime.utcnow()).isoformat()
+        invalid_iso = (invalid_time or datetime.now(timezone.utc)).isoformat()
         with self.db.get_connection() as conn:
             conn.execute(
                 "UPDATE memory_nodes SET invalid_from = ? WHERE id = ? AND invalid_from IS NULL",
@@ -49,7 +54,7 @@ class BiTemporalGraphStore:
 
     def reinforce_node(self, node_id: str) -> None:
         """Reinforce memory node upon active recall/reference (doubles stability)."""
-        now_iso = datetime.utcnow().isoformat()
+        now_iso = datetime.now(timezone.utc).isoformat()
         with self.db.get_connection() as conn:
             conn.execute(
                 """
@@ -116,18 +121,25 @@ class BiTemporalGraphStore:
             return cursor.rowcount > 0
 
     def _row_to_node(self, row) -> MemoryNode:
+        is_ymyl = bool(row["ymyl_protected"])
+        raw_object = row["object"]
+        if is_ymyl and ymyl_encryption.is_encrypted(raw_object):
+            plain_object = ymyl_encryption.decrypt(raw_object)
+        else:
+            plain_object = raw_object
+
         return MemoryNode(
             id=row["id"],
             subject=row["subject"],
             predicate=row["predicate"],
-            object=row["object"],
+            object=plain_object,
             category=MemoryCategory(row["category"]),
             confidence=float(row["confidence"]),
             stability=float(row["stability"]),
             last_reinforced_at=datetime.fromisoformat(row["last_reinforced_at"]),
             valid_from=datetime.fromisoformat(row["valid_from"]),
             invalid_from=datetime.fromisoformat(row["invalid_from"]) if row["invalid_from"] else None,
-            ymyl_protected=bool(row["ymyl_protected"]),
+            ymyl_protected=is_ymyl,
             source_turn_id=row["source_turn_id"],
             created_at=datetime.fromisoformat(row["created_at"]),
         )

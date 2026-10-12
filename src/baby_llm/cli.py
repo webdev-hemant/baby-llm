@@ -86,6 +86,10 @@ def main():
     subparsers.add_parser("dream", help="Trigger REM dream consolidation cycle")
     subparsers.add_parser("memories", help="List active memory nodes")
     subparsers.add_parser("mcp", help="Run Universal MCP server over stdio")
+
+    ui_parser = subparsers.add_parser("ui", help="Open Glass-box UI in default web browser")
+    ui_parser.add_argument("--port", type=int, default=settings.api_port, help=f"Port to bind (default: {settings.api_port})")
+    ui_parser.add_argument("--host", type=str, default=settings.api_host, help=f"Host to bind (default: {settings.api_host})")
     
     serve_parser = subparsers.add_parser("serve", help="Run FastAPI local REST server")
     serve_parser.add_argument("--port", type=int, default=settings.api_port, help=f"Port to bind (default: {settings.api_port})")
@@ -103,6 +107,11 @@ def main():
     elif args.command == "mcp":
         from baby_llm.mcp.server import run_mcp_server
         run_mcp_server()
+    elif args.command == "ui":
+        import webbrowser
+        target_url = f"http://{args.host}:{args.port}/"
+        print(f"Opening Baby LLM Glass-Box UI at {target_url}...")
+        webbrowser.open(target_url)
     elif args.command == "serve":
         import uvicorn
         uvicorn.run("baby_llm.api.server:app", host=args.host, port=args.port, reload=False)

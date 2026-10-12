@@ -1,5 +1,6 @@
 """FastAPI server for Baby LLM REST API and WebSocket events."""
 
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Query
@@ -18,12 +19,29 @@ from baby_llm.storage.wal import wal_logger
 from baby_llm.success.agent import success_agent
 from baby_llm.success.curiosity import curiosity_engine
 from baby_llm.success.tracker import success_tracker
+from baby_llm.sync.obsidian_sync import vault_sync
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 from pathlib import Path
 
-app = FastAPI(title="Baby LLM Engine", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup background daemons
+    dream_worker.start_background_daemon()
+    vault_sync.start_observer()
+    success_agent.start_scheduler()
+    try:
+        yield
+    finally:
+        # Graceful shutdown of daemons
+        dream_worker.stop_background_daemon()
+        vault_sync.stop_observer()
+        success_agent.stop_scheduler()
+
+
+app = FastAPI(title="Baby LLM Engine", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,6 +1,6 @@
 """Bi-temporal conflict and contradiction resolver."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from baby_llm.core.models import MemoryCategory, MemoryNode
 from baby_llm.retrieval.embedder import get_embedder
@@ -38,7 +38,7 @@ class ConflictResolver:
         4. If new:
            - Inserts and embeds new node.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         active_matches = self.graph.find_active_by_subject_predicate(subject, predicate)
 
         for old_node in active_matches:
