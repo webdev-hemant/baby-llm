@@ -3,8 +3,21 @@
 import os
 import sys
 import threading
+import warnings
 from pathlib import Path
 from typing import Generator, List, Optional
+
+# Suppress unauthenticated Hugging Face Hub rate-limit warnings for public models
+os.environ.setdefault("HF_HUB_VERBOSITY", "error")
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+warnings.filterwarnings("ignore", message=".*unauthenticated requests.*")
+
+try:
+    from huggingface_hub.utils import logging as hf_logging
+    hf_logging.set_verbosity_error()
+except Exception:
+    pass
+
 from huggingface_hub import hf_hub_download
 from llama_cpp import Llama
 from baby_llm.config import settings

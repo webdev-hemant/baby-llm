@@ -107,7 +107,7 @@ mkdir -p "${INSTALL_DIR}"
 mkdir -p "${BIN_DIR}"
 
 info "Provisioning isolated Python 3.12 environment in ${INSTALL_DIR}/venv..."
-"${UV_BIN}" venv --python 3.12 "${INSTALL_DIR}/venv" --quiet
+"${UV_BIN}" venv --python 3.12 "${INSTALL_DIR}/venv" --allow-existing --quiet
 success "Python 3.12 isolated environment created."
 
 # Step 4: Install baby-llm
@@ -127,6 +127,8 @@ success "Baby LLM package and embedded dependencies installed successfully."
 info "Creating launcher executable in ${EXECUTABLE}..."
 cat << 'EOF' > "${EXECUTABLE}"
 #!/usr/bin/env bash
+export HF_HUB_VERBOSITY="error"
+export HF_HUB_DISABLE_SYMLINKS_WARNING="1"
 exec "${HOME}/.local/share/baby-llm/venv/bin/baby-llm" "$@"
 EOF
 chmod +x "${EXECUTABLE}"
