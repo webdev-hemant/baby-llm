@@ -157,7 +157,7 @@ Add the following to your Claude Desktop configuration file:
 {
   "mcpServers": {
     "baby-llm": {
-      "command": "/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
+      "command": "/path/to/baby-llm/.venv/bin/python",
       "args": ["-m", "baby_llm.cli", "mcp"]
     }
   }
@@ -171,7 +171,7 @@ Add the following to your Claude Desktop configuration file:
 4. Configure the server parameters:
    - **Name**: `baby-llm`
    - **Type**: `command`
-   - **Command**: `/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
+   - **Command**: `/path/to/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
 5. Click **Save** and verify the green status indicator.
 
 ---
@@ -185,7 +185,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 server_params = StdioServerParameters(
-    command="/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
+    command="/path/to/baby-llm/.venv/bin/python",
     args=["-m", "baby_llm.cli", "mcp"],
 )
 

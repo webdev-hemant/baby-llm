@@ -46,7 +46,7 @@ All configuration fields support overriding via:
 # ==============================================================================
 
 # Storage Paths
-BABY_LLM_APP_DIR=/Users/admin/.baby_llm
+# BABY_LLM_APP_DIR=~/.baby_llm
 BABY_LLM_DB_FILENAME=baby_llm.sqlite3
 BABY_LLM_LANCEDB_DIRNAME=lancedb
 BABY_LLM_VAULT_DIRNAME=vault

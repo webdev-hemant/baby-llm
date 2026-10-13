@@ -33,7 +33,8 @@ Baby LLM is engineered to run 100% offline on standard consumer hardware without
 ### Step 2.1: Clone or Navigate to the Repository
 Open a terminal and navigate to the project directory:
 ```bash
-cd /Users/admin/Desktop/corporate/projects/baby-llm
+git clone https://github.com/webdev-hemant/baby-llm.git
+cd baby-llm
 ```
 
 ### Step 2.2: Create and Activate a Virtual Environment
@@ -119,7 +120,7 @@ Connect Baby LLM as a persistent long-term memory tool for your AI agents in und
 4. Configure the server parameters:
    - **Name**: `baby-llm`
    - **Type**: `command`
-   - **Command**: `/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
+   - **Command**: `/path/to/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
 5. Click **Save** and verify the green status indicator.
 
 ### 3.2 Configure Claude Desktop
@@ -133,7 +134,7 @@ Add the `baby-llm` entry:
 {
   "mcpServers": {
     "baby-llm": {
-      "command": "/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
+      "command": "/path/to/baby-llm/.venv/bin/python",
       "args": ["-m", "baby_llm.cli", "mcp"]
     }
   }
@@ -148,7 +149,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 server_params = StdioServerParameters(
-    command="/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
+    command="/path/to/baby-llm/.venv/bin/python",
     args=["-m", "baby_llm.cli", "mcp"],
 )
 
@@ -314,7 +315,7 @@ cp .env.example .env
 Key environment configuration variables:
 ```bash
 # Storage directory (default: ~/.baby_llm)
-BABY_LLM_APP_DIR=/Users/admin/.baby_llm
+# BABY_LLM_APP_DIR=~/.baby_llm
 
 # REST API Server host and port
 BABY_LLM_API_HOST=127.0.0.1

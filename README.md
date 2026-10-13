@@ -1,6 +1,7 @@
 # 👶 Baby LLM
 *The Privacy-First, Self-Evolving Local Memory & Life Success Engine*
 
+[![CI](https://github.com/webdev-hemant/baby-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/webdev-hemant/baby-llm/actions)
 [![Python: 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Privacy: 100% Offline](https://img.shields.io/badge/Privacy-100%25%20Local-purple.svg)](#privacy--data-sovereignty)
@@ -126,8 +127,9 @@ Unlike conventional chatbots that suffer from context amnesia or stream private 
 
 ### 2. Environment Setup
 ```bash
-# Clone or navigate to the repository
-cd /Users/admin/Desktop/corporate/projects/baby-llm
+# Clone the repository
+git clone https://github.com/webdev-hemant/baby-llm.git
+cd baby-llm
 
 # Create virtual environment and install dependencies
 uv venv --python 3.12 .venv
@@ -205,7 +207,7 @@ Connect Baby LLM memory to **Cursor IDE** or **Claude Desktop** by updating your
 {
   "mcpServers": {
     "baby-llm": {
-      "command": "/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python",
+      "command": "/path/to/baby-llm/.venv/bin/python",
       "args": ["-m", "baby_llm.cli", "mcp"]
     }
   }
@@ -215,7 +217,7 @@ Connect Baby LLM memory to **Cursor IDE** or **Claude Desktop** by updating your
 ### Cursor (`Cursor Settings -> Features -> MCP -> Add New MCP Server`)
 - **Name**: `baby-llm`
 - **Type**: `command`
-- **Command**: `/Users/admin/Desktop/corporate/projects/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
+- **Command**: `/path/to/baby-llm/.venv/bin/python -m baby_llm.cli mcp`
 
 #### Exposed MCP Tools:
 | Tool | Description |

@@ -10,8 +10,9 @@ Baby LLM is built with modern Python 3.11+ tooling and uses `hatchling` as its b
 
 ### 1.1 Setting Up the Development Environment
 ```bash
-# 1. Clone or navigate to the repository
-cd /Users/admin/Desktop/corporate/projects/baby-llm
+# 1. Clone the repository
+git clone https://github.com/webdev-hemant/baby-llm.git
+cd baby-llm
 
 # 2. Create Python 3.12 virtual environment using uv
 uv venv --python 3.12 .venv

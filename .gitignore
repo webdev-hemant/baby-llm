@@ -9,18 +9,34 @@ env/
 venv/
 ENV/
 
-# Testing & coverage
+# Environment files & secrets
+.env
+.env.*
+!.env.example
+
+# Large downloaded model weights & GGUF binaries
+*.gguf
+*.bin
+*.onnx
+
+# Testing, type checking & coverage
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Local databases & storage
+# Local databases & application storage
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
 .baby_llm/
 lancedb/
 
-# OS specific
+# OS & Editor specific
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
