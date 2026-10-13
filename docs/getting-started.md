@@ -19,13 +19,12 @@ Baby LLM is engineered to run 100% offline on standard consumer hardware without
 │ Memory (RAM)          │ 2 GB minimum (4 GB recommended)                │
 │ Disk Storage          │ ~1.5 GB for base venv, GGUF, & ONNX models     │
 │ OS Credential Store   │ macOS Keychain, Linux Secret Service, WinCred  │
-│ Optional Local Daemon │ Ollama (llama3.2:3b / qwen2.5:7b)              │
+│ Inference Engine      │ Embedded Qwen2.5-0.5B GGUF (Zero-Daemon)       │
 └───────────────────────┴────────────────────────────────────────────────┘
 ```
 
-### Inference Engine Flexibility:
-- **Zero-Daemon Default (Embedded)**: Baby LLM includes an embedded inference engine (`llama-cpp-python`) that automatically downloads and runs `Qwen2.5-0.5B-Instruct-GGUF` (`qwen2.5-0.5b-instruct-q4_k_m.gguf` ~398 MB) locally. No background services are required.
-- **Optional Ollama Integration**: If you prefer larger models (e.g., `llama3.2:3b` or `qwen2.5:7b`), run `ollama serve` and Baby LLM connects dynamically via HTTP at `http://localhost:11434`.
+### 100% Self-Contained In-Process Inference:
+- **Zero Daemon Required**: Baby LLM includes an embedded inference engine (`llama-cpp-python`) that automatically loads and runs `Qwen2.5-0.5B-Instruct-GGUF` (`qwen2.5-0.5b-instruct-q4_k_m.gguf` ~398 MB) locally. No background services, external daemons, or Ollama required.
 
 ---
 
@@ -209,7 +208,7 @@ By default, the server binds to `127.0.0.1:21225`.
 > [!NOTE]
 > **Why Port 21225?**
 > - **Mnemonic Encoding**: `21225` spells **`B-A-B-Y`** (`B=2, A=1, B=2, Y=25`).
-> - **Collision Avoidance**: Situated in the user-registered port range (`1024`–`49151`), it prevents conflicts with Vite (`5173`), Next.js (`3000`), FastAPI/Django (`8000`), PostgreSQL (`5432`), and Ollama (`11434`).
+> - **Collision Avoidance**: Situated in the user-registered port range (`1024`–`49151`), it prevents conflicts with Vite (`5173`), Next.js (`3000`), FastAPI/Django (`8000`), and PostgreSQL (`5432`).
 
 ### Mode 3: Interactive Terminal Chat
 Chat directly with Baby LLM from your shell:
@@ -321,9 +320,9 @@ BABY_LLM_APP_DIR=/Users/admin/.baby_llm
 BABY_LLM_API_HOST=127.0.0.1
 BABY_LLM_API_PORT=21225
 
-# Inference Engine (Ollama or Embedded)
-BABY_LLM_OLLAMA_BASE_URL=http://localhost:11434
-BABY_LLM_CHAT_MODEL=llama3.2:latest
+# Embedded Local Inference Engine (Zero Daemon / Zero Ollama)
+BABY_LLM_EMBEDDED_MODEL_REPO=Qwen/Qwen2.5-0.5B-Instruct-GGUF
+BABY_LLM_EMBEDDED_MODEL_FILENAME=qwen2.5-0.5b-instruct-q4_k_m.gguf
 
 # Episodic Ring Buffer size (default: 15 turns)
 BABY_LLM_RING_BUFFER_SIZE=15

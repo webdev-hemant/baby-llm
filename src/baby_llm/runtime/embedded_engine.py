@@ -17,17 +17,17 @@ DEFAULT_FILENAME = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
 class EmbeddedLLMEngine:
     def __init__(
         self,
-        repo_id: str = DEFAULT_REPO_ID,
-        filename: str = DEFAULT_FILENAME,
-        n_ctx: int = 2048,
-        n_gpu_layers: int = 0,
-        n_threads: int = 4,
+        repo_id: Optional[str] = None,
+        filename: Optional[str] = None,
+        n_ctx: Optional[int] = None,
+        n_gpu_layers: Optional[int] = None,
+        n_threads: Optional[int] = None,
     ):
-        self.repo_id = repo_id
-        self.filename = filename
-        self.n_ctx = n_ctx
-        self.n_gpu_layers = n_gpu_layers
-        self.n_threads = n_threads
+        self.repo_id = repo_id or getattr(settings, "embedded_model_repo", DEFAULT_REPO_ID)
+        self.filename = filename or getattr(settings, "embedded_model_filename", DEFAULT_FILENAME)
+        self.n_ctx = n_ctx if n_ctx is not None else getattr(settings, "embedded_model_n_ctx", 2048)
+        self.n_gpu_layers = n_gpu_layers if n_gpu_layers is not None else getattr(settings, "embedded_model_n_gpu_layers", 0)
+        self.n_threads = n_threads if n_threads is not None else getattr(settings, "embedded_model_n_threads", 4)
         self._llm: Optional[Llama] = None
         self._model_path: Optional[str] = None
         self._lock = threading.Lock()

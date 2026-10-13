@@ -9,28 +9,28 @@
 Baby LLM centralizes configuration management in `src/baby_llm/config.py` using Pydantic Settings (`pydantic-settings`).
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│             CONFIGURATION SETTINGS REFERENCE (BABY_LLM_*)              │
-├──────────────────────┬────────────────────────┬────────────────────────┤
-│ Setting Field        │ Default Value          │ Description & Role     │
-├──────────────────────┼────────────────────────┼────────────────────────┤
-│ app_dir              │ ~/.baby_llm            │ Root data storage path │
-│ db_filename          │ baby_llm.sqlite3       │ SQLite database file   │
-│ lancedb_dirname      │ lancedb                │ LanceDB vector folder  │
-│ vault_dirname        │ vault                  │ Obsidian sync folder   │
-│ api_host             │ 127.0.0.1              │ FastAPI host binding   │
-│ api_port             │ 21225                  │ FastAPI port (B-A-B-Y) │
-│ ollama_base_url      │ http://localhost:11434 │ Ollama daemon URL      │
-│ chat_model           │ llama3.2:latest        │ Fast-path chat model   │
-│ embedding_model      │ BAAI/bge-small-en-v1.5 │ FastEmbed ONNX model   │
-│ embedding_dimension  │ 384                    │ Embedding vector size  │
-│ dream_model          │ smollm2:1.7b           │ Consolidation SLM      │
-│ idle_trigger_seconds │ 900                    │ Inactivity timeout 15m │
-│ dream_cron_hour      │ 3                      │ Nightly 03:00 cron hr  │
-│ ring_buffer_size     │ 15                     │ Episodic ring turns    │
-│ hybrid_top_k         │ 5                      │ Retrieved facts count  │
-│ rrf_k_constant       │ 60                     │ RRF smoothing factor   │
-└──────────────────────┴────────────────────────┴────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                       CONFIGURATION SETTINGS REFERENCE (BABY_LLM_*)                    │
+├────────────────────────┬────────────────────────────────────┬──────────────────────────┤
+│ Setting Field          │ Default Value                      │ Description & Role       │
+├────────────────────────┼────────────────────────────────────┼──────────────────────────┤
+│ app_dir                │ ~/.baby_llm                        │ Root data storage path   │
+│ db_filename            │ baby_llm.sqlite3                   │ SQLite database file     │
+│ lancedb_dirname        │ lancedb                            │ LanceDB vector folder    │
+│ vault_dirname          │ vault                              │ Obsidian sync folder     │
+│ api_host               │ 127.0.0.1                          │ FastAPI host binding     │
+│ api_port               │ 21225                              │ FastAPI port (B-A-B-Y)   │
+│ embedded_model_repo    │ Qwen/Qwen2.5-0.5B-Instruct-GGUF    │ HF model repository      │
+│ embedded_model_filename│ qwen2.5-0.5b-instruct-q4_k_m.gguf  │ Embedded GGUF model file │
+│ embedded_model_n_ctx   │ 2048                               │ Context window size      │
+│ embedding_model        │ BAAI/bge-small-en-v1.5             │ FastEmbed ONNX model     │
+│ embedding_dimension    │ 384                                │ Embedding vector size    │
+│ idle_trigger_seconds   │ 900                                │ Inactivity timeout 15m   │
+│ dream_cron_hour        │ 3                                  │ Nightly 03:00 cron hr    │
+│ ring_buffer_size       │ 15                                 │ Episodic ring turns      │
+│ hybrid_top_k           │ 5                                  │ Retrieved facts count    │
+│ rrf_k_constant         │ 60                                 │ RRF smoothing factor     │
+└────────────────────────┴────────────────────────────────────┴──────────────────────────┘
 ```
 
 ### 1.1 Environment Variable Precedence
@@ -55,10 +55,11 @@ BABY_LLM_VAULT_DIRNAME=vault
 BABY_LLM_API_HOST=127.0.0.1
 BABY_LLM_API_PORT=21225
 
-# Inference Engine Settings
-BABY_LLM_OLLAMA_BASE_URL=http://localhost:11434
-BABY_LLM_CHAT_MODEL=llama3.2:latest
-BABY_LLM_DREAM_MODEL=smollm2:1.7b
+# Embedded Local Inference Engine (Zero Daemon / Zero Ollama)
+BABY_LLM_EMBEDDED_MODEL_REPO=Qwen/Qwen2.5-0.5B-Instruct-GGUF
+BABY_LLM_EMBEDDED_MODEL_FILENAME=qwen2.5-0.5b-instruct-q4_k_m.gguf
+BABY_LLM_EMBEDDED_MODEL_N_CTX=2048
+BABY_LLM_EMBEDDED_MODEL_N_THREADS=4
 
 # Embeddings & Hybrid Retrieval
 BABY_LLM_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5

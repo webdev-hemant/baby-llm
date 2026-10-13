@@ -63,8 +63,8 @@ Unlike conventional chatbots that suffer from context amnesia or stream private 
 │   └──────────────────────────────────┬──────────────────────────────────┘   │
 │                                      │                                      │
 │                                      ▼                                      │
-│                  Local Inference Engine (Ollama / llama.cpp)                │
-│                  Models: Llama 3.2 3B / Qwen 2.5 7B / Mistral Nemo          │
+│            Embedded In-Process LLM Engine (Zero Daemon / llama.cpp)         │
+│             Model: Qwen2.5-0.5B-Instruct GGUF (~398MB In-Process)           │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
                       Instant Append   │ (Zero-blocking write to WAL)
@@ -122,7 +122,7 @@ Unlike conventional chatbots that suffer from context amnesia or stream private 
 
 ### 1. Prerequisites
 - **Python 3.11+**
-- **Ollama** installed and running locally (`ollama run llama3.2:3b` or `ollama run qwen2.5:7b`)
+- **Zero External Daemons**: No Ollama, Docker, or external service required. Baby LLM runs an embedded Qwen2.5-0.5B-Instruct engine (`llama-cpp-python`) and BGE-Small-EN embeddings (`fastembed`) 100% in-process.
 
 ### 2. Environment Setup
 ```bash
@@ -256,7 +256,8 @@ baby-llm/
 │       │   └── hybrid.py                    # Reciprocal Rank Fusion (RRF) retriever
 │       ├── runtime/
 │       │   ├── context_assembler.py         # Sub-20ms prompt compiler
-│       │   └── ollama_client.py             # Local Ollama streaming client
+│       │   ├── embedded_engine.py           # In-process llama-cpp GGUF inference
+│       │   └── llm_provider.py              # Zero-daemon local LLM provider
 │       ├── dream/
 │       │   ├── worker.py                    # Background REM consolidation loop
 │       │   ├── extractor.py                 # Sub-2B SLM atomic fact parser
@@ -306,7 +307,7 @@ Baby LLM maintains a complete unit and integration test suite:
 
 ## 🔒 Privacy & Data Sovereignty
 
-* **Zero Cloud Inference**: All embeddings (BGE-Small-EN ONNX) and LLM inference (Ollama) run 100% on your local CPU / GPU.
+* **Zero Cloud Inference**: All embeddings (BGE-Small-EN ONNX) and LLM inference (Embedded Qwen2.5-0.5B GGUF) run 100% in-process on your local CPU / GPU.
 * **Encrypted at Rest**: High-stakes YMYL data is isolated and protected.
 * **No Telemetry**: Absolutely zero diagnostic pings, analytics, or external network requests.
 * **Complete User Sovereignty**: You own your SQLite and LanceDB files locally (`~/.baby_llm/`). Erase or export any record at any time with a single click.

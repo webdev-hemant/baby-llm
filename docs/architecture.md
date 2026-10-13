@@ -100,7 +100,7 @@ The Baby LLM architecture spans four distinct vertical layers:
 │   ├─ Episodic Ring Buffer (deque: in-RAM sliding window)               │
 │   ├─ Hybrid Retrieval (RRF: SQLite FTS5 BM25 + LanceDB BGE Vectors)    │
 │   ├─ FastMCP Server (recall_memory, commit_fact, get_active_goals)     │
-│   └─ Fast Inference (Embedded Qwen2.5-0.5B GGUF or Ollama Bridge)      │
+│   └─ Fast Inference (Embedded Qwen2.5-0.5B-Instruct In-Process)        │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼ [Zero-Blocking Append]
@@ -187,7 +187,7 @@ When an external agent invokes `recall_memory(query)` or `commit_fact(...)`:
 When a human chats via CLI or Web UI:
 1. **Record Activity**: Immediately sets `self._pause_event` to yield compute from any running Dream Worker.
 2. **Context Assembly (<20ms)**: Merges system persona, retrieved active memories, active goals, and episodic ring buffer.
-3. **Inference**: Dispatches prompt to embedded Qwen2.5-0.5B GGUF or local Ollama.
+3. **Inference**: Dispatches prompt directly to embedded Qwen2.5-0.5B GGUF via llama-cpp-python.
 4. **Append Log**: Writes turn to SQLite WAL (`interaction_log`) without blocking response streaming.
 
 ### 5.3 Asynchronous REM Dream Consolidation Pipeline

@@ -1,4 +1,4 @@
-"""Atomic fact extraction pipeline using local SLMs (SmolLM2 / Qwen2.5)."""
+"""Atomic fact extraction pipeline using embedded local SLM (Qwen2.5)."""
 
 import json
 import re

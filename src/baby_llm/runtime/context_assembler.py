@@ -31,7 +31,7 @@ class ContextAssembler:
     ) -> List[dict]:
         """
         Compiles the full message payload for local LLM inference.
-        Returns a list of OpenAI/Ollama compatible chat messages:
+        Returns a list of standard OpenAI-compatible chat messages:
         [{"role": "system", "content": "..."}, {"role": "user", ...}]
         """
         system_sections = [BASE_PERSONA_PROMPT.strip()]

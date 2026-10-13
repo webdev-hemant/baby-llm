@@ -22,14 +22,16 @@ class Settings(BaseSettings):
     api_host: str = "127.0.0.1"
     api_port: int = 21225
 
-    # Fast-Path LLM Settings
-    ollama_base_url: str = "http://localhost:11434"
-    chat_model: str = "llama3.2:latest"
+    # Embedded Local Inference Settings (100% Standalone / Zero Daemon)
+    embedded_model_repo: str = "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+    embedded_model_filename: str = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+    embedded_model_n_ctx: int = 2048
+    embedded_model_n_threads: int = 4
+    embedded_model_n_gpu_layers: int = 0
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     embedding_dimension: int = 384
 
-    # Dream Engine SLM Settings
-    dream_model: str = "smollm2:1.7b"
+    # Dream Engine Settings
     idle_trigger_seconds: int = 900  # 15 minutes
     dream_cron_hour: int = 3         # 3:00 AM
 

@@ -234,7 +234,7 @@ The following diagram illustrates the end-to-end data flow and subsystem topolog
 │   ├─ Episodic Ring Buffer (deque: in-RAM sliding window)               │
 │   ├─ Hybrid Retrieval (RRF: SQLite FTS5 BM25 + LanceDB BGE Vectors)    │
 │   ├─ FastMCP Server (recall_memory, commit_fact, get_active_goals)     │
-│   └─ Fast Inference (Embedded Qwen2.5-0.5B GGUF or Ollama Bridge)      │
+│   └─ Fast Inference (Embedded Qwen2.5-0.5B-Instruct In-Process)        │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼ [Zero-Blocking Append]
@@ -320,7 +320,7 @@ Depending on your role and objectives, follow these recommended reading sequence
 | **Data Encryption** | `YMYLEncryptionManager` (AES-GCM-256) | Attribute-level encryption of sensitive facts at rest; backed by OS Keyring with `0600` local file fallback. |
 | **Success Compass** | `PersonalSuccessAgent` + `SuccessTracker` | 07:30 AM Morning Brief with SQLite caching; 21:30 PM Nightly Reflection; accountability watchdog for overdue goals. |
 | **Gentle Curiosity** | `GentleCuriosityEngine` | At most 1 subtle clarifying probe per session; detects ambiguous entities (`project <name>`) without annoying users. |
-| **Fast-Path Chat** | `ContextAssembler` + `UnifiedLLMProvider` | Sub-30ms assembly overhead; zero-blocking WAL write; automatic fallback from Embedded Qwen to Ollama. |
+| **Fast-Path Chat** | `ContextAssembler` + `LocalLLMProvider` | Sub-30ms assembly overhead; zero-blocking WAL write; 100% in-process embedded Qwen2.5-0.5B inference. |
 | **Glass-Box UI** | Vanilla JS + Glassmorphic CSS | PWA standalone dashboard on Port 21225 (`B-A-B-Y`); Mindstream inspector, Timeline visualizer, one-click erase. |
 | **Vault Sync** | `VaultSyncManager` + `watchdog` | Bidirectional synchronization between SQLite graph and local Markdown/Obsidian files with YAML frontmatter. |
 
