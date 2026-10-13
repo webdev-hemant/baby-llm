@@ -53,3 +53,23 @@ def test_stability_extension():
     r = engine.calculate_retention(reinforced_node)
     # Importance for work is 2.0 -> exponent = -10 / (8 * 2) = -10/16 = -0.625 -> exp(-0.625) ~ 0.535
     assert r > 0.50
+
+
+def test_offset_naive_datetime_handling():
+    """Verify decay calculation handles offset-naive strings and datetimes without crashing."""
+    engine = EbbinghausDecayEngine()
+    # String from legacy SQLite DB without timezone offset
+    naive_str_node = MemoryNode(
+        subject="user",
+        predicate="likes",
+        object="coffee",
+        category=MemoryCategory.PREFERENCE,
+        last_reinforced_at="2026-09-30T06:53:28.464672",
+    )
+    r1 = engine.calculate_retention(naive_str_node, as_of=datetime.now(timezone.utc))
+    assert 0.0 <= r1 <= 1.0
+
+    # Naive datetime object as as_of
+    naive_dt = datetime(2026, 10, 1, 12, 0, 0)
+    r2 = engine.calculate_retention(naive_str_node, as_of=naive_dt)
+    assert 0.0 <= r2 <= 1.0

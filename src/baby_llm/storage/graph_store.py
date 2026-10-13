@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from typing import List, Optional
-from baby_llm.core.models import MemoryCategory, MemoryNode
+from baby_llm.core.models import MemoryCategory, MemoryNode, ensure_utc
 from baby_llm.security.encryption import ymyl_encryption
 from baby_llm.storage.db import DatabaseManager, db_manager
 
@@ -204,12 +204,12 @@ class BiTemporalGraphStore:
             scope=scope_val,
             confidence=float(row["confidence"]),
             stability=float(row["stability"]),
-            last_reinforced_at=datetime.fromisoformat(row["last_reinforced_at"]),
-            valid_from=datetime.fromisoformat(row["valid_from"]),
-            invalid_from=datetime.fromisoformat(row["invalid_from"]) if row["invalid_from"] else None,
+            last_reinforced_at=ensure_utc(row["last_reinforced_at"]),
+            valid_from=ensure_utc(row["valid_from"]),
+            invalid_from=ensure_utc(row["invalid_from"]),
             ymyl_protected=is_ymyl,
             source_turn_id=row["source_turn_id"],
-            created_at=datetime.fromisoformat(row["created_at"]),
+            created_at=ensure_utc(row["created_at"]),
         )
 
 

@@ -6,7 +6,7 @@ import threading
 from typing import List, Optional
 import uuid
 
-from baby_llm.core.models import Commitment
+from baby_llm.core.models import Commitment, ensure_utc
 from baby_llm.runtime.llm_provider import llm_provider
 from baby_llm.storage.db import DatabaseManager, db_manager
 from baby_llm.storage.graph_store import BiTemporalGraphStore, graph_store
@@ -98,8 +98,9 @@ class PersonalSuccessAgent:
         active = self.tracker.get_active_commitments()
         alerts = []
         for c in active:
-            if c.target_deadline and c.target_deadline < now:
-                days_overdue = (now - c.target_deadline).days
+            deadline = ensure_utc(c.target_deadline)
+            if deadline and deadline < now:
+                days_overdue = (now - deadline).days
                 alerts.append(f"Commitment '{c.title}' was due {days_overdue} day(s) ago.")
         return alerts
 

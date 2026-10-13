@@ -3,7 +3,7 @@
 import math
 from datetime import datetime, timezone
 from typing import List, Tuple
-from baby_llm.core.models import MemoryNode
+from baby_llm.core.models import MemoryNode, ensure_utc
 from baby_llm.storage.graph_store import BiTemporalGraphStore, graph_store
 from baby_llm.storage.vector_store import LanceVectorStore, vector_store
 
@@ -29,8 +29,9 @@ class EbbinghausDecayEngine:
         if node.ymyl_protected:
             return 1.0
 
-        current_time = as_of or datetime.now(timezone.utc)
-        elapsed_seconds = (current_time - node.last_reinforced_at).total_seconds()
+        current_time = ensure_utc(as_of) or datetime.now(timezone.utc)
+        last_reinforced = ensure_utc(node.last_reinforced_at) or current_time
+        elapsed_seconds = (current_time - last_reinforced).total_seconds()
         t_days = max(0.0, elapsed_seconds / 86400.0)
 
         # Importance multiplier: category-based

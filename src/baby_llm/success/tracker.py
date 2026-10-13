@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from typing import List, Optional
-from baby_llm.core.models import Commitment, CommitmentStatus
+from baby_llm.core.models import Commitment, CommitmentStatus, ensure_utc
 from baby_llm.storage.db import DatabaseManager, db_manager
 
 
@@ -75,9 +75,9 @@ class SuccessTracker:
             title=row["title"],
             description=row["description"],
             status=CommitmentStatus(row["status"]),
-            target_deadline=datetime.fromisoformat(row["target_deadline"]) if row["target_deadline"] else None,
-            detected_at=datetime.fromisoformat(row["detected_at"]),
-            resolved_at=datetime.fromisoformat(row["resolved_at"]) if row["resolved_at"] else None,
+            target_deadline=ensure_utc(row["target_deadline"]),
+            detected_at=ensure_utc(row["detected_at"]),
+            resolved_at=ensure_utc(row["resolved_at"]),
             associated_node_id=row["associated_node_id"],
         )
 
