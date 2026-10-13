@@ -3,218 +3,468 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baby LLM | Glass-Box Life Companion & Cognitive Memory</title>
+  <title>Baby LLM | Glass-Box Cognitive Engine & Local Memory</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2.0">
+  <link rel="stylesheet" href="styles.css?v=3.0">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
 </head>
 <body>
-  <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
-
   <!-- Header Bar -->
   <header class="top-nav">
     <div class="nav-left">
       <div class="logo-group">
-        <div class="logo-orb">
-          <div class="orb-pulse"></div>
-          <span class="logo-emoji">👶</span>
+        <div class="logo-mark">
+          <img src="icon.svg" alt="Baby LLM Logo" width="28" height="28">
         </div>
-        <div>
-          <h1 class="brand-title">Baby LLM</h1>
-          <span class="brand-subtitle">Privacy-First Evolving Memory & Life Compass</span>
+        <div class="logo-meta">
+          <div class="brand-row">
+            <span class="brand-title">Baby LLM</span>
+            <span class="version-badge">v0.1.0</span>
+          </div>
+          <span class="brand-tagline">Glass-Box Memory & Cognitive Companion</span>
         </div>
       </div>
-      <div class="status-chip" id="system-status-chip">
-        <span class="status-dot pulse-green"></span>
-        <span id="system-status-text">Fast-Path: Awake (< 20ms)</span>
-      </div>
-    </div>
-
-    <div class="nav-center">
-      <div class="maturity-meter" id="maturity-meter-container" title="Evolutionary Stage">
-        <span class="maturity-label">Stage 1: Infancy (Day 3)</span>
-        <div class="meter-bar"><div class="meter-fill" style="width: 28%;"></div></div>
-        <span class="meter-stats">Curiosity: High</span>
+      <div class="status-cluster">
+        <div class="status-indicator live" id="system-status-indicator" title="Local server connected">
+          <span class="status-dot"></span>
+          <span id="system-status-text">Awake · 127.0.0.1:21225</span>
+        </div>
+        <div class="runtime-badge" title="Local GGUF execution on Apple Silicon Metal">
+          <span class="badge-icon">⚡</span>
+          <span>Qwen2.5-0.5B (Local GGUF)</span>
+        </div>
+        <div class="runtime-badge security" title="Local storage, zero telemetry">
+          <span class="badge-icon">🛡️</span>
+          <span>Air-Gapped · AES-256</span>
+        </div>
       </div>
     </div>
 
     <div class="nav-right">
-      <div class="telemetry-badge">
-        <span class="telemetry-icon">🔒</span>
-        <span>AES-GCM-256</span>
+      <div class="memory-count-badge" id="nav-memory-badge" title="Active memory nodes in graph">
+        <span class="count-num" id="memory-count">0</span>
+        <span class="count-label">Facts</span>
       </div>
-      <div class="telemetry-badge">
-        <span class="telemetry-icon">⚡</span>
-        <span id="active-vram-text">SLM: Idle</span>
-      </div>
-      <button class="btn btn-secondary" id="btn-trigger-dream" title="Trigger Background REM Dream Consolidation">
-        <span>🌙 Trigger Dream</span>
+      <button class="btn btn-secondary" id="btn-trigger-dream" title="Trigger Background REM Dream Consolidation (⌘D)">
+        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span id="btn-dream-label">Consolidate</span>
+        <kbd class="shortcut-key">⌘D</kbd>
       </button>
-      <button class="btn btn-primary" id="btn-add-memory" title="Manually Add Fact">
-        <span>+ Add Memory</span>
+      <button class="btn btn-primary" id="btn-add-memory" title="Manually Add Fact (⌘N)">
+        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Add Fact</span>
+        <kbd class="shortcut-key light">⌘N</kbd>
       </button>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="dashboard-grid">
-    <!-- Left Column: Chat & Mindstream -->
-    <section class="panel main-stage">
-      <div class="tab-header">
-        <button class="tab-btn active" id="tab-btn-chat">💬 Interactive Companion</button>
-        <button class="tab-btn" id="tab-btn-mindstream">🧠 Mindstream Vault (<span id="memory-count">0</span>)</button>
-        <button class="tab-btn" id="tab-btn-timeline">🕸️ Bi-Temporal Timeline</button>
-      </div>
+  <!-- Main Workspace Grid -->
+  <main class="app-layout">
+    <!-- Left Stage: Main Cockpit -->
+    <section class="stage-pane">
+      <!-- Navigation Tabs -->
+      <nav class="stage-tabs" aria-label="Views">
+        <button class="stage-tab active" id="tab-btn-chat" data-tab="view-chat">
+          <span class="tab-icon">💬</span>
+          <span class="tab-title">Interactive Terminal</span>
+        </button>
+        <button class="stage-tab" id="tab-btn-mindstream" data-tab="view-mindstream">
+          <span class="tab-icon">🧠</span>
+          <span class="tab-title">Mindstream Vault</span>
+          <span class="tab-pill" id="tab-vault-counter">0</span>
+        </button>
+        <button class="stage-tab" id="tab-btn-timeline" data-tab="view-timeline">
+          <span class="tab-icon">🕸️</span>
+          <span class="tab-title">Bi-Temporal Lineage</span>
+        </button>
+        <button class="stage-tab" id="tab-btn-telemetry" data-tab="view-telemetry">
+          <span class="tab-icon">📈</span>
+          <span class="tab-title">Decay Telemetry</span>
+        </button>
+      </nav>
 
-      <!-- Tab 1: Chat View -->
-      <div class="tab-content active" id="view-chat">
-        <div class="chat-history" id="chat-messages">
-          <div class="message system-msg">
-            <div class="msg-avatar">👶</div>
-            <div class="msg-bubble">
-              <p><strong>Hello! I am Baby LLM.</strong></p>
-              <p>I operate 100% locally on your machine with zero cloud surveillance. As we talk, I will automatically learn your preferences, goals, and routines, consolidating them during background REM dream cycles.</p>
-              <div class="security-guarantee">
-                <small>🛡️ Air-gapped privacy • Bi-temporal graph • Ebbinghaus memory retention</small>
+      <!-- Tab View 1: Chat Terminal -->
+      <div class="view-panel active" id="view-chat">
+        <div class="chat-thread" id="chat-messages">
+          <!-- System Welcome Message -->
+          <div class="chat-row assistant-row">
+            <div class="avatar-cell">
+              <div class="bot-avatar">
+                <img src="icon.svg" alt="Baby LLM" width="20" height="20">
+              </div>
+            </div>
+            <div class="bubble-cell">
+              <div class="bubble-header">
+                <span class="author-label">Baby LLM</span>
+                <span class="bubble-meta">Local Companion · Fast-Path</span>
+              </div>
+              <div class="bubble-body">
+                <p>Hello! I am your privacy-first, embedded cognitive companion. Everything you tell me is stored securely in your local SQLite and LanceDB vector stores without cloud telemetry.</p>
+                <p>During conversation, I continuously recall relevant context and extract actionable facts, which are consolidated and pruned using the scientific Ebbinghaus decay curve during REM dream cycles.</p>
+              </div>
+              <!-- Starter prompts -->
+              <div class="starter-prompts-group">
+                <span class="prompts-title">Suggested prompts to test local memory:</span>
+                <div class="prompts-grid">
+                  <button class="prompt-chip" data-text="What are my active goals and commitments right now?">
+                    🎯 What are my active goals?
+                  </button>
+                  <button class="prompt-chip" data-text="I relocated to Tokyo and now work on compiler architecture.">
+                    📍 I relocated to Tokyo
+                  </button>
+                  <button class="prompt-chip" data-text="I have an allergy to penicillin (please mark this as medical fact).">
+                    🛡️ I am allergic to penicillin
+                  </button>
+                  <button class="prompt-chip" data-text="How does your Ebbinghaus memory decay and retention curve work?">
+                    🧠 Explain your memory curve
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="chat-controls-bar">
-          <label class="incognito-toggle" id="incognito-label" title="Incognito Mode: Bypass WAL logging for temporary/private questions">
-            <input type="checkbox" id="toggle-incognito">
-            <span class="incognito-pill" id="incognito-pill-text">🕵️ Incognito: Off</span>
-          </label>
+        <!-- Chat Input Bar -->
+        <div class="chat-composer-container">
+          <div class="composer-toolbar">
+            <label class="incognito-switch" id="incognito-label" title="Incognito Mode: Bypass Write-Ahead Logging for private inquiries">
+              <input type="checkbox" id="toggle-incognito">
+              <span class="switch-indicator"></span>
+              <span class="switch-text" id="incognito-pill-text">Incognito: Off</span>
+            </label>
+            <div class="composer-hints">
+              <span class="hint-item"><kbd>Return</kbd> to send</span>
+              <span class="hint-item"><kbd>Shift + Return</kbd> for newline</span>
+            </div>
+          </div>
+          <form class="composer-input-row" id="chat-form">
+            <textarea
+              id="chat-input"
+              rows="1"
+              placeholder="Ask a question, update a belief, or record a life update..."
+              autocomplete="off"
+            ></textarea>
+            <button type="submit" class="send-action-btn" id="btn-send" title="Send message (Return)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </form>
         </div>
+      </div>
 
-        <form class="chat-input-bar" id="chat-form">
-          <input type="text" id="chat-input" placeholder="Type a thought, goal, or life update..." autocomplete="off">
-          <button type="submit" class="send-btn" id="btn-send">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+      <!-- Tab View 2: Mindstream Vault -->
+      <div class="view-panel" id="view-mindstream">
+        <div class="vault-toolbar">
+          <div class="search-box">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-          </button>
-        </form>
+            <input type="text" id="vault-search-input" placeholder="Search beliefs, subjects, or relations (⌘K)...">
+            <button class="clear-search-btn" id="btn-clear-search" style="display: none;">&times;</button>
+          </div>
+          <div class="category-filters" id="category-filters-container">
+            <button class="filter-pill active" data-category="all">All</button>
+            <button class="filter-pill" data-category="work">Work</button>
+            <button class="filter-pill" data-category="health">Health</button>
+            <button class="filter-pill" data-category="finance">Finance</button>
+            <button class="filter-pill" data-category="goal">Goals</button>
+            <button class="filter-pill" data-category="lifestyle">Lifestyle</button>
+            <button class="filter-pill" data-category="preference">Preferences</button>
+          </div>
+          <div class="vault-sort-container">
+            <select id="vault-sort-select" class="clean-select">
+              <option value="recent">Sort: Most Recent</option>
+              <option value="stability">Sort: High Stability</option>
+              <option value="confidence">Sort: Confidence</option>
+            </select>
+          </div>
+        </div>
+        <div class="vault-cards-grid" id="memory-cards-container">
+          <!-- Dynamically populated via JS -->
+        </div>
       </div>
 
-      <!-- Tab 2: Mindstream Vault -->
-      <div class="tab-content" id="view-mindstream">
-        <div class="mindstream-filters">
-          <button class="filter-pill active" data-category="all">All</button>
-          <button class="filter-pill" data-category="work">Work</button>
-          <button class="filter-pill" data-category="health">Health</button>
-          <button class="filter-pill" data-category="finance">Finance</button>
-          <button class="filter-pill" data-category="goal">Goals</button>
-          <button class="filter-pill" data-category="lifestyle">Lifestyle</button>
-          <button class="filter-pill" data-category="preference">Preferences</button>
+      <!-- Tab View 3: Bi-Temporal Lineage -->
+      <div class="view-panel" id="view-timeline">
+        <div class="timeline-header-bar">
+          <div class="timeline-info">
+            <h3>Knowledge Trajectory & Contradiction Lineage</h3>
+            <p>Bi-temporal tracking records both the validity interval of facts and when they were updated or superseded.</p>
+          </div>
         </div>
-        <div class="cards-grid" id="memory-cards-container">
-          <!-- Rendered via JS -->
-        </div>
-      </div>
-
-      <!-- Tab 3: Bi-Temporal Timeline -->
-      <div class="tab-content" id="view-timeline">
-        <div class="timeline-container" id="timeline-list">
+        <div class="timeline-track" id="timeline-list">
           <div class="timeline-empty">Loading bi-temporal evolution timeline...</div>
+        </div>
+      </div>
+
+      <!-- Tab View 4: Cognitive Decay Telemetry -->
+      <div class="view-panel" id="view-telemetry">
+        <div class="telemetry-dashboard">
+          <div class="metrics-deck">
+            <div class="metric-card">
+              <span class="metric-label">Active Facts</span>
+              <span class="metric-value text-emerald" id="telemetry-active-count">0</span>
+              <span class="metric-desc">Available for vector retrieval</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">YMYL Protected</span>
+              <span class="metric-value text-rose" id="telemetry-ymyl-count">0</span>
+              <span class="metric-desc">Infinite retention floor (1.0)</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Superseded / Expired</span>
+              <span class="metric-value text-slate" id="telemetry-archived-count">0</span>
+              <span class="metric-desc">Preserved in history for audit</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Average Stability</span>
+              <span class="metric-value text-blue" id="telemetry-avg-stability">1.0d</span>
+              <span class="metric-desc">Doubles with each recall</span>
+            </div>
+          </div>
+
+          <div class="telemetry-detail-card">
+            <div class="detail-card-header">
+              <h4>Ebbinghaus Forgetting Curve Model</h4>
+              <span class="formula-badge">R(t) = exp( -t / (S · I) )</span>
+            </div>
+            <p class="detail-card-text">
+              Every memory node has an intrinsic stability factor <code>S</code> and a category importance weight <code>I</code>.
+              When a fact is recalled or referenced, its stability doubles. Facts with retention <code>R &lt; 0.20</code> are archived during dream consolidation to prevent hallucination.
+            </p>
+            <div class="weights-table-wrapper">
+              <table class="weights-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Importance Weight (I)</th>
+                    <th>Retention Behavior</th>
+                    <th>Audit Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="badge-tag health">Health</span></td>
+                    <td><code>3.0x</code></td>
+                    <td>YMYL Protected (Floor = 1.0)</td>
+                    <td>Encrypted AES-GCM</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge-tag finance">Finance</span></td>
+                    <td><code>3.0x</code></td>
+                    <td>YMYL Protected (Floor = 1.0)</td>
+                    <td>Encrypted AES-GCM</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge-tag goal">Goal</span></td>
+                    <td><code>2.5x</code></td>
+                    <td>High Retention (Slow Decay)</td>
+                    <td>Plaintext Local</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge-tag work">Work</span></td>
+                    <td><code>2.0x</code></td>
+                    <td>Medium-High Retention</td>
+                    <td>Plaintext Local</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge-tag lifestyle">Lifestyle</span></td>
+                    <td><code>1.2x</code></td>
+                    <td>Standard Decay</td>
+                    <td>Plaintext Local</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge-tag preference">Preference</span></td>
+                    <td><code>1.0x</code></td>
+                    <td>Standard Decay</td>
+                    <td>Plaintext Local</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Right Column: Personal Success Compass -->
-    <aside class="panel success-sidebar">
+    <!-- Right Stage: Personal Success Compass -->
+    <aside class="sidebar-pane">
       <div class="sidebar-header">
-        <h2>🎯 Success Compass</h2>
-        <span class="proactive-badge">Proactive Loop</span>
+        <div class="sidebar-title-group">
+          <span class="compass-icon">🎯</span>
+          <h2>Success Compass</h2>
+        </div>
+        <span class="status-pill-small">Proactive Engine</span>
       </div>
 
-      <!-- Morning Briefing Card -->
-      <div class="brief-card" id="brief-card">
-        <div class="brief-header">
-          <span class="brief-icon">🌅</span>
-          <h3>Morning Readiness Brief</h3>
+      <!-- Morning Readiness Brief -->
+      <div class="compass-section">
+        <div class="section-top-row">
+          <div class="section-title-label">
+            <span class="sun-icon">🌅</span>
+            <h3>Morning Readiness Brief</h3>
+          </div>
+          <button class="icon-refresh-btn" id="btn-refresh-brief" title="Regenerate brief">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6"></path>
+              <path d="M1 20v-6h6"></path>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
         </div>
-        <div class="brief-body" id="morning-brief-text">
-          Loading today's needle-moving priorities and focus guidance...
+        <div class="brief-card-body" id="morning-brief-text">
+          <div class="loading-state">
+            <span class="spinner-circle"></span>
+            <span>Loading today's needle-moving priorities...</span>
+          </div>
         </div>
-      </div>
-
-      <!-- Overdue Alerts -->
-      <div class="alerts-container" id="alerts-container" style="display: none;">
-        <!-- Dynamic Alerts -->
       </div>
 
       <!-- Active Commitments & Goals -->
-      <div class="commitments-section">
-        <div class="section-title-row">
-          <h3>Commitment Loop</h3>
-          <button class="btn-text" id="btn-quick-commitment">+ New</button>
+      <div class="compass-section">
+        <div class="section-top-row">
+          <div class="section-title-label">
+            <span class="check-icon">⚡</span>
+            <h3>Commitment Loop</h3>
+          </div>
+          <span class="badge-counter" id="commitments-counter">0 active</span>
         </div>
-        <div class="commitments-list" id="commitments-list">
-          <!-- Rendered via JS -->
+
+        <!-- Quick Add Goal Inline Input -->
+        <form class="quick-add-goal-form" id="form-quick-goal">
+          <input
+            type="text"
+            id="input-quick-goal"
+            placeholder="+ Add a needle-moving goal (Return)..."
+            autocomplete="off"
+          >
+        </form>
+
+        <div class="commitments-container" id="commitments-list">
+          <!-- Dynamically populated via JS -->
         </div>
       </div>
 
       <!-- Nightly Unload Trigger -->
-      <div class="nightly-card">
-        <div class="nightly-info">
-          <h4>🌙 Nightly Brain Dump</h4>
-          <p>Clear mental runway before sleep. Acknowledge wins & release friction.</p>
+      <div class="compass-section nightly-section">
+        <div class="nightly-card">
+          <div class="nightly-lead">
+            <span class="moon-icon">🌙</span>
+            <div>
+              <h4>Nightly Brain Dump</h4>
+              <p>Acknowledge wins & clear friction before bed.</p>
+            </div>
+          </div>
+          <button class="btn btn-outline full-width" id="btn-open-reflection">
+            Record Evening Reflection
+          </button>
         </div>
-        <button class="btn btn-outline" id="btn-open-reflection">Record Reflection</button>
       </div>
     </aside>
   </main>
 
-  <!-- Modal: Add / Edit Memory Node -->
+  <!-- Modal: Create / Edit Memory Node -->
   <div class="modal-backdrop" id="modal-add-memory" style="display: none;">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 id="modal-title">Create Personal Memory Node</h3>
-        <button class="modal-close" id="btn-close-modal">&times;</button>
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
+        <div class="modal-title-wrap">
+          <span class="modal-badge-icon">🧠</span>
+          <h3 id="modal-title">Create Personal Memory Node</h3>
+        </div>
+        <button class="modal-close-btn" id="btn-close-modal" aria-label="Close dialog">&times;</button>
       </div>
       <form id="form-create-memory">
         <input type="hidden" id="edit-node-id" value="">
-        <div class="form-group">
-          <label for="input-subject">Subject</label>
-          <input type="text" id="input-subject" value="user" required>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="input-subject">Subject</label>
+            <input type="text" id="input-subject" value="user" required placeholder="user">
+          </div>
+          <div class="form-field">
+            <label for="input-predicate">Predicate (Relation)</label>
+            <input type="text" id="input-predicate" placeholder="e.g. lives_in, allergic_to, prefers" required>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="input-predicate">Predicate (Relation)</label>
-          <input type="text" id="input-predicate" placeholder="e.g., lives_in, allergic_to, prefers" required>
-        </div>
-        <div class="form-group">
+        <div class="form-field">
           <label for="input-object">Object (Value)</label>
-          <input type="text" id="input-object" placeholder="e.g., Seattle, Peanuts, Dark Mode" required>
+          <input type="text" id="input-object" placeholder="e.g. Tokyo, Penicillin, Dark Mode" required>
         </div>
-        <div class="form-group">
+        <div class="form-field">
           <label for="select-category">Category</label>
-          <select id="select-category">
-            <option value="preference">Preference</option>
-            <option value="work">Work</option>
-            <option value="health">Health (YMYL Protected)</option>
-            <option value="finance">Finance (YMYL Protected)</option>
-            <option value="goal">Goal</option>
-            <option value="lifestyle">Lifestyle</option>
-            <option value="relationship">Relationship</option>
+          <select id="select-category" class="clean-select">
+            <option value="preference">Preference (Personal choices & tastes)</option>
+            <option value="work">Work (Roles, projects, tech stacks)</option>
+            <option value="health">Health (Allergies, conditions - YMYL Protected)</option>
+            <option value="finance">Finance (Budget, assets - YMYL Protected)</option>
+            <option value="goal">Goal (Active priorities & targets)</option>
+            <option value="lifestyle">Lifestyle (Routines, location, habits)</option>
+            <option value="relationship">Relationship (Family, colleagues, mentors)</option>
           </select>
         </div>
-        <div class="form-check">
-          <input type="checkbox" id="check-ymyl">
-          <label for="check-ymyl">🛡️ YMYL Protection (Infinite retention floor)</label>
+        <div class="form-toggle-row">
+          <label class="clean-checkbox-label">
+            <input type="checkbox" id="check-ymyl">
+            <span class="checkbox-box"></span>
+            <span class="checkbox-text">
+              <strong>YMYL Protection:</strong> Immune to temporal Ebbinghaus decay with infinite retention floor (1.0)
+            </span>
+          </label>
         </div>
-        <div class="modal-actions">
+        <div class="modal-actions-bar">
           <button type="button" class="btn btn-secondary" id="btn-cancel-memory">Cancel</button>
-          <button type="submit" class="btn btn-primary">Commit to Vault</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-memory">Commit to Vault</button>
         </div>
       </form>
     </div>
   </div>
+
+  <!-- Modal: Nightly Reflection Brain Dump -->
+  <div class="modal-backdrop" id="modal-reflection" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
+        <div class="modal-title-wrap">
+          <span class="modal-badge-icon">🌙</span>
+          <h3>Nightly Cognitive Reflection</h3>
+        </div>
+        <button class="modal-close-btn" id="btn-close-reflection">&times;</button>
+      </div>
+      <form id="form-reflection">
+        <div class="form-field">
+          <label for="reflection-input">Evening Brain Dump</label>
+          <textarea
+            id="reflection-input"
+            rows="5"
+            placeholder="What went well today? What caused friction? What can you safely let go of until tomorrow morning?"
+            required
+          ></textarea>
+        </div>
+        <div class="modal-actions-bar">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-reflection">Close</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-reflection">Record & Process</button>
+        </div>
+      </form>
+      <div class="reflection-response-container" id="reflection-response-box" style="display: none;">
+        <div class="reflection-response-header">
+          <span class="bot-badge">Baby LLM Response</span>
+        </div>
+        <div class="reflection-response-text" id="reflection-response-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Dock -->
+  <div class="toast-dock" id="toast-dock" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>

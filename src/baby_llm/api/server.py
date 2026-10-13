@@ -6,7 +6,7 @@ from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from baby_llm.core.models import InteractionTurn, MemoryCategory, MemoryNode
+from baby_llm.core.models import CommitmentStatus, InteractionTurn, MemoryCategory, MemoryNode
 from baby_llm.core.ring_buffer import EpisodicRingBuffer
 from baby_llm.dream.decay import decay_engine
 from baby_llm.dream.resolver import conflict_resolver
@@ -296,3 +296,50 @@ def get_success_compass():
         ],
         "alerts": alerts,
     }
+
+
+class CommitmentCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = None
+    target_deadline: Optional[datetime] = None
+
+
+class CommitmentStatusUpdateRequest(BaseModel):
+    status: CommitmentStatus
+
+
+class ReflectionRequest(BaseModel):
+    brain_dump: str = ""
+
+
+@app.post("/api/success/commitments")
+def create_commitment(req: CommitmentCreateRequest):
+    """Add a new personal goal or commitment."""
+    c = success_tracker.add_commitment(
+        title=req.title,
+        description=req.description,
+        target_deadline=req.target_deadline,
+    )
+    return {
+        "status": "created",
+        "id": c.id,
+        "title": c.title,
+        "commitment_status": c.status.value,
+        "deadline": c.target_deadline.isoformat() if c.target_deadline else None,
+    }
+
+
+@app.patch("/api/success/commitments/{commitment_id}")
+def update_commitment_status(commitment_id: str, req: CommitmentStatusUpdateRequest):
+    """Update commitment status (e.g. mark completed or dropped)."""
+    ok = success_tracker.update_status(commitment_id, req.status)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Commitment not found")
+    return {"status": "updated", "id": commitment_id, "new_status": req.status.value}
+
+
+@app.post("/api/success/reflection")
+def record_evening_reflection(req: ReflectionRequest):
+    """Process nightly reflection brain dump with local LLM."""
+    response = success_agent.generate_evening_reflection(req.brain_dump)
+    return {"status": "recorded", "response": response}
