@@ -108,10 +108,33 @@ def main():
         from baby_llm.mcp.server import run_mcp_server
         run_mcp_server()
     elif args.command == "ui":
+        import socket
+        import threading
+        import time
         import webbrowser
+
         target_url = f"http://{args.host}:{args.port}/"
-        print(f"Opening Baby LLM Glass-Box UI at {target_url}...")
-        webbrowser.open(target_url)
+        server_running = False
+        try:
+            with socket.create_connection((args.host, args.port), timeout=0.3):
+                server_running = True
+        except OSError:
+            server_running = False
+
+        if server_running:
+            print(f"Baby LLM Glass-Box server is already running on {target_url}. Opening browser...")
+            webbrowser.open(target_url)
+        else:
+            print(f"🚀 Starting Baby LLM Glass-Box server at {target_url}...")
+            print("Opening your browser in a moment. Press Ctrl+C to stop.")
+
+            def _open_browser():
+                time.sleep(0.8)
+                webbrowser.open(target_url)
+
+            threading.Thread(target=_open_browser, daemon=True).start()
+            import uvicorn
+            uvicorn.run("baby_llm.api.server:app", host=args.host, port=args.port, reload=False)
     elif args.command == "serve":
         import uvicorn
         uvicorn.run("baby_llm.api.server:app", host=args.host, port=args.port, reload=False)

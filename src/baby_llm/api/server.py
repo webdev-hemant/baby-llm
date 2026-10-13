@@ -51,8 +51,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# UI directory resolution
-ui_dir = Path(__file__).resolve().parent.parent.parent.parent / "ui"
+def _resolve_ui_dir() -> Path:
+    # 1. Package-embedded UI directory
+    pkg_ui = Path(__file__).resolve().parent.parent / "ui"
+    if pkg_ui.exists() and (pkg_ui / "index.html").exists():
+        return pkg_ui
+    # 2. Workspace / repository root fallback
+    repo_ui = Path(__file__).resolve().parent.parent.parent.parent / "ui"
+    if repo_ui.exists() and (repo_ui / "index.html").exists():
+        return repo_ui
+    return pkg_ui
+
+ui_dir = _resolve_ui_dir()
 
 @app.get("/")
 def root():
