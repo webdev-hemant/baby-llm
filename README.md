@@ -121,11 +121,32 @@ Unlike conventional chatbots that suffer from context amnesia or stream private 
 
 ## 📦 Quickstart & Installation
 
-### 1. Prerequisites
-- **Python 3.11+**
-- **Zero External Daemons**: No Ollama, Docker, or external service required. Baby LLM runs an embedded Qwen2.5-0.5B-Instruct engine (`llama-cpp-python`) and BGE-Small-EN embeddings (`fastembed`) 100% in-process.
+### 🚀 One-Liner Install (macOS & Linux)
+Install Baby LLM and all embedded dependencies with a single command without needing root/sudo or manual Python environment management:
+```bash
+curl -fsSL https://raw.githubusercontent.com/webdev-hemant/baby-llm/main/install.sh | bash
+```
+> **What this does**: Automatically provisions an isolated environment in `~/.local/share/baby-llm`, downloads a standalone Python 3.12 runtime via `uv` if required, leverages Apple Silicon Metal GPU acceleration, and creates the `baby-llm` command in `~/.local/bin`.
 
-### 2. Environment Setup
+Once installed, you can immediately run:
+```bash
+baby-llm chat    # Start interactive offline chat
+baby-llm ui      # Launch Glass-Box Web Dashboard (Port 21225)
+baby-llm serve   # Run local REST API server
+```
+
+---
+
+### ⚡ Zero-Install Instant Run with `uvx`
+If you already have `uv` installed, try Baby LLM immediately in an ephemeral sandbox:
+```bash
+uvx --from git+https://github.com/webdev-hemant/baby-llm.git baby-llm chat
+```
+
+---
+
+### 🛠️ Manual / Contributor Setup
+For contributors developing locally:
 ```bash
 # Clone the repository
 git clone https://github.com/webdev-hemant/baby-llm.git

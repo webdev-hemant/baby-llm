@@ -28,10 +28,19 @@ Baby LLM is engineered to run 100% offline on standard consumer hardware without
 
 ---
 
-## 2. Step-by-Step Installation
+## 2. Installation Options
 
-### Step 2.1: Clone or Navigate to the Repository
-Open a terminal and navigate to the project directory:
+### Option A: One-Liner Installer (Recommended for macOS & Linux)
+Install Baby LLM and all embedded runtime dependencies without manual virtual environment management:
+```bash
+curl -fsSL https://raw.githubusercontent.com/webdev-hemant/baby-llm/main/install.sh | bash
+```
+
+### Option B: Step-by-Step Manual Installation
+For developers and contributors who want to inspect or modify the source:
+
+#### Step 2.1: Clone the Repository
+Open a terminal and clone the repository:
 ```bash
 git clone https://github.com/webdev-hemant/baby-llm.git
 cd baby-llm
